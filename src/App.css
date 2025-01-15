@@ -1,0 +1,63 @@
+.key {
+  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid blue;
+  margin: 2px;
+}
+
+.noCount {
+  background: #b8b8b8;
+}
+
+.oneCount {
+  background: #F0EA8A;
+}
+
+.twoCount {
+  background: #c0f08a;
+}
+
+.threeCount {
+  background: #a9f08a;
+}
+
+.manyCount {
+  background: #8af0ae;
+}
+
+.keyLetter {
+  font-weight: 300;
+  font-size: 30px;
+}
+
+.keyCount {
+  font-size: 12px;
+}
+
+.keyRow {
+  display: flex;
+  height: 60px;
+}
+
+.top {
+}
+
+.mid {
+  margin-left: 25px;
+}
+
+.bottom {
+  margin-left: 60px;
+}
+
+.invalidMessage {
+  color: red;
+}
+
+.submissionBox {
+  font-size:24px;
+}
