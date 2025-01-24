@@ -8,7 +8,7 @@
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-.key {
+.letter {
   border-radius: 8px;
   width: 50px;
   height: 50px;
@@ -17,6 +17,10 @@
   align-items: center;
   border: 1px solid blue;
   margin: 2px;
+}
+
+.selected {
+  background: #c8c83b;
 }
 
 .noCount {
@@ -59,4 +63,29 @@
 
 .submissionBox {
   font-size:24px;
+}
+
+#lines {
+  position: absolute;
+  top: 0;
+  opacity: .5;
+  z-index: 10
+}
+
+.lineOrDot {
+  background-color: #111ba2;
+  border: 0 solid transparent;
+  pointer-events: none;
+  position: absolute
+}
+
+.dot {
+  /* --height: calc(10 * var(--unit));
+  height: var(--height);
+  width: var(--height); */
+  border-radius: 50%
+}
+
+.line {
+  border-radius: 10px
 }
