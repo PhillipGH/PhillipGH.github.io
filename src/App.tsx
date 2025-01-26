@@ -103,8 +103,8 @@ function isValidMove(die: TDie, currentWord: TDie[], dice: TDie[][]) {
 
 function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (d: TDie) => void }) {
   return (
-    <div className={'letter'} onPointerDown={() => props.onClick(props.die)} onPointerEnter={() => props.onEnter(props.die)}>
-      <p className={'keyLetter'}>{props.die.letter.toUpperCase()}</p>
+    <div className={'letter'} onPointerDown={() => props.onClick(props.die)}>
+      <p className={'keyLetter'} onPointerEnter={() => props.onEnter(props.die)}>{props.die.letter.toUpperCase()}</p>
       {/* <p className="keyCount">{'(' + props.count + ')'}</p> */}
     </div>
   );
@@ -121,9 +121,9 @@ function Lines(props: {squareRefs: null|(null|HTMLDivElement)[][], dice: TDie[][
     const currentRef = getSquareRef(current, props.dice, props.squareRefs);
     if (!prevRef || !currentRef) continue;
     const ax = prevRef.getBoundingClientRect().x + 25;
-    const ay = prevRef.getBoundingClientRect().y + 25;
-    const bx = currentRef.getBoundingClientRect().x + 25;
-    const by = currentRef.getBoundingClientRect().y + 25;
+    const ay = prevRef.getBoundingClientRect().y+ 25;
+    const bx = currentRef.getBoundingClientRect().x+ 25;
+    const by = currentRef.getBoundingClientRect().y+ 25;
     lines.push({ax, ay, bx, by});
   }
   return <div id="lines">
@@ -162,7 +162,7 @@ function Line(props : {ax: number, ay: number, bx: number, by: number}) {
     left: ax,
     top: ay,
     width: length,
-    height: 25,
+    height: 15,
     transform: `rotate(${angle}deg)`,
     msTransform: `rotate(${angle}deg)`,
     transformOrigin: '0% 0%',
@@ -243,6 +243,9 @@ function Board(props: {}) {
   }
 
   return <div className="game">
+    <div className="currentWord">
+    <h1>{currentWord.map(d => d.letter).join('')}</h1>
+    </div>
     <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} />
   </div>;
 }

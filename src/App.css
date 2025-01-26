@@ -65,6 +65,11 @@
   font-size:24px;
 }
 
+.currentWord {
+  height: 50px;
+  margin-bottom: 20px;
+}
+
 #lines {
   position: absolute;
   top: 0;
