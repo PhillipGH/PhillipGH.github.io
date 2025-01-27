@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
+import dictionaryRaw from './assets/dictionary1.txt?raw'
 
 type TDie = { letter: string, faces: string[] };
 
@@ -31,6 +32,14 @@ const ALL_DICE_FACES = [
   'isfraa',
   'nrlhdo'
 ];
+
+function loadDictionary() {
+  let dictionary = new Set<string>();
+  dictionaryRaw.split('\n').forEach((word) => {
+    dictionary.add(word.trim());
+  });
+  return dictionary;
+}
 
 const ALL_DICE: TDie[] = ALL_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces]}));
 
@@ -171,26 +180,30 @@ function Line(props : {ax: number, ay: number, bx: number, by: number}) {
   }} />;
 } 
 
-function Grid(props: { dice: TDie[][], currentWord: TDie[], setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>} ) {
+function Grid(props: {
+  dice: TDie[][],
+  currentWord: TDie[],
+  setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
+  commitWord: () => void
+} ) {
   const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   useEffect(() => {
     function onMouseUp() {
       setIsMouseDown(false);
-      props.setCurrentWord([]);
+      props.commitWord();
     }
     window.addEventListener('mouseup', onMouseUp);
     
     return () => {
       window.removeEventListener('mouseup', onMouseUp);
     }
-  }, []);
+  }, [props.currentWord]);
 
   function getSquares() {
     if (!squaresRef.current) {
       // Initialize the Map on first usage.
       squaresRef.current = props.dice.map((row: TDie[]) => row.map((_die: TDie) => null));
-      console.log('p2', squaresRef.current)
     }
     return squaresRef.current;
   }
@@ -233,29 +246,40 @@ function Grid(props: { dice: TDie[][], currentWord: TDie[], setCurrentWord: Reac
   </div>;
 }
 
-function Board(props: {}) {
+function Board(props: {dictionary: Set<string>}) {
   const columns = 5;
   const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
 
-  function onLetter(die: TDie) {
-    setCurrentWord(currentWord.concat(die));
+  function commitWord() {
+    const word = currentWord.map(d => d.letter).join('');
+    if (word.length < 3) {
+      setCurrentWord([]);
+      return;
+    }
+    if (props.dictionary.has(word)) {
+      console.log('Found word: ' + word);
+    } else {
+      console.log('Not a word: ' + word);
+    }
+    setCurrentWord([]);
   }
 
   return <div className="game">
     <div className="currentWord">
     <h1>{currentWord.map(d => d.letter).join('')}</h1>
     </div>
-    <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} />
+    <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord}/>
   </div>;
 }
 
 function App() {
-
-  const [answer, setAnswer] = useState('');
-
+  let [dictionary, setDictionary] = useState(new Set<string>());
+  useEffect(() => {
+    setDictionary(loadDictionary());
+  }, []);
   return <div className="app noselect">
-    <Board />
+    <Board dictionary={dictionary}/>
   </div>;
 }
 
