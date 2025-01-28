@@ -119,34 +119,20 @@ function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (d: TDi
   );
 }
 
-function Lines(props: {squareRefs: null|(null|HTMLDivElement)[][], dice: TDie[][], currentWord: TDie[]}) {
-  if (props.currentWord.length === 0) return <></>;
-  if (props.squareRefs === null) return <></>;
-  const lines : {ax: number, ay: number, bx: number, by: number}[] = [];
-  for (let i = 1; i < props.currentWord.length; i++) {
-    const prev = props.currentWord[i - 1];
-    const current = props.currentWord[i];
-    const prevRef = getSquareRef(prev, props.dice, props.squareRefs);
-    const currentRef = getSquareRef(current, props.dice, props.squareRefs);
-    if (!prevRef || !currentRef) continue;
-    const ax = prevRef.getBoundingClientRect().x + 25;
-    const ay = prevRef.getBoundingClientRect().y+ 25;
-    const bx = currentRef.getBoundingClientRect().x+ 25;
-    const by = currentRef.getBoundingClientRect().y+ 25;
-    lines.push({ax, ay, bx, by});
-  }
+function Lines(props: {linesEqs: {ax: number, ay: number, bx: number, by: number}[], fadeOut: boolean}) {
   return <div id="lines">
-    {lines.map((line, i) => 
-      <Line {...line} key={i} />
-      )}
-  </div>;
+  {props.linesEqs.map((line, i) => 
+    <Line eq={line} fadeOut={props.fadeOut} key={i} />
+    )}
+</div>;
+  
 }
 
-function Line(props : {ax: number, ay: number, bx: number, by: number}) {
-    let ax = props.ax;
-    let ay = props.ay;
-    let bx = props.bx;
-    let by = props.by;
+function Line(props :{ fadeOut: boolean, eq : {ax: number, ay: number, bx: number, by: number}}) {
+    let ax = props.eq.ax;
+    let ay = props.eq.ay;
+    let bx = props.eq.bx;
+    let by = props.eq.by;
 
     if (ax > bx) {
         bx = ax + bx;
@@ -167,7 +153,8 @@ function Line(props : {ax: number, ay: number, bx: number, by: number}) {
     angle = -angle;
 
     var length = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-  return <div className="lineOrDot line" style={{
+    let className = props.fadeOut ? 'lineOrDot line fadeOut' : 'lineOrDot line';
+  return <div className={className} style={{
     left: ax,
     top: ay,
     width: length,
@@ -188,6 +175,7 @@ function Grid(props: {
 } ) {
   const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  let [lines, setLines] = useState<{ax: number, ay: number, bx: number, by: number}[]>([]);
   useEffect(() => {
     function onMouseUp() {
       setIsMouseDown(false);
@@ -210,17 +198,40 @@ function Grid(props: {
 
   function onClick(die: TDie) {
     setIsMouseDown(true);
-    props.setCurrentWord([die]);
+    setCurrentWord([die]);
   }
 
   function onEnter(die: TDie) {
     if (!isMouseDown) return;
     if (props.currentWord.length > 1 && props.currentWord[props.currentWord.length - 2] === die) {
-      props.setCurrentWord(props.currentWord.slice(0, -1));
+      setCurrentWord(props.currentWord.slice(0, -1));
       return;
     }
     if (!isValidMove(die, props.currentWord, props.dice)) return;
-    props.setCurrentWord(props.currentWord.concat(die));
+    setCurrentWord(props.currentWord.concat(die));
+  }
+
+  function setCurrentWord(word: TDie[]) {
+    setLines(calculateLines(word));
+    props.setCurrentWord(word);
+  }
+
+  function calculateLines(word: TDie[]) {
+    if (squaresRef.current === null) return [];
+    const lines : {ax: number, ay: number, bx: number, by: number}[] = [];
+  for (let i = 1; i < word.length; i++) {
+    const prev = word[i - 1];
+    const current = word[i];
+    const prevRef = getSquareRef(prev, props.dice, squaresRef.current);
+    const currentRef = getSquareRef(current, props.dice, squaresRef.current);
+    if (!prevRef || !currentRef) continue;
+    const ax = prevRef.getBoundingClientRect().x + 25;
+    const ay = prevRef.getBoundingClientRect().y+ 25;
+    const bx = currentRef.getBoundingClientRect().x+ 25;
+    const by = currentRef.getBoundingClientRect().y+ 25;
+    lines.push({ax, ay, bx, by});
+  }
+  return lines;
   }
 
   return <div className="grid" onPointerUp={() => setIsMouseDown(false)}>
@@ -242,7 +253,7 @@ function Grid(props: {
               </div>
           )}
         </div>)}
-    <Lines squareRefs={squaresRef.current} dice={props.dice} currentWord={props.currentWord}/>
+    <Lines linesEqs={lines} fadeOut={props.currentWord.length === 0}/>
   </div>;
 }
 
@@ -250,24 +261,46 @@ function Board(props: {dictionary: Set<string>}) {
   const columns = 5;
   const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
+  const [lastWord, setLastWord] = useState(<h1></h1>);
+  const [score, setScore] = useState<number>(0);
 
   function commitWord() {
     const word = currentWord.map(d => d.letter).join('');
     if (word.length < 3) {
       setCurrentWord([]);
+      setLastWord(<></>);
       return;
     }
+    let suffix = null;
     if (props.dictionary.has(word)) {
-      console.log('Found word: ' + word);
+      let scoreChange = scoreWord(word);
+      suffix = <p style={{display: 'inline-block'}}>{' +' + scoreChange}</p>;
+      setScore(score + scoreChange);
     } else {
-      console.log('Not a word: ' + word);
+      suffix = <p style={{display: 'inline-block'}}>{String.fromCodePoint(0x1f603)}</p>;
     }
+    let last = <div><h1 style={{display: 'inline-block'}}>{word}</h1>{suffix}</div>;
+    setLastWord(last);
     setCurrentWord([]);
   }
 
+  function fib(n: number): number {
+    if (n === 0) return 0;
+    if (n === 1) return 1;
+    return fib(n - 1) + fib(n - 2);
+  }
+
+  function scoreWord(word: string) {
+    return word.length > 2 ? fib(word.length - 2) : 0;
+  }
+
+  let displayWord = currentWord.length > 0 ?
+    <h1>{currentWord.map(d => d.letter).join('')}</h1> :
+    <div className="fadeOut">{lastWord}</div>;
+
   return <div className="game">
     <div className="currentWord">
-    <h1>{currentWord.map(d => d.letter).join('')}</h1>
+    {displayWord}
     </div>
     <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord}/>
   </div>;

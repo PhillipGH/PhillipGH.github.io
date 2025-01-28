@@ -94,3 +94,25 @@
 .line {
   border-radius: 10px
 }
+
+/* Fade-Out Effect */
+/* .fadeOut
+{
+visibility: hidden;
+opacity: 0;
+transition: visibility 1s 2s, opacity 2s linear;
+} */
+
+.fadeOut {
+  animation: fadeOut ease 5s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
