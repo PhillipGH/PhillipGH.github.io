@@ -19,6 +19,15 @@
   margin: 2px;
 }
 
+.letterDiv {
+  border-radius: 25px;
+  width: 25px;
+  height: 25px;
+  display: flex;  
+  justify-content: center;
+  align-items: center;
+}
+
 .selected {
   background: #c8c83b;
 }
@@ -44,7 +53,7 @@
 }
 
 .keyLetter {
-  font-weight: 300;
+  font-weight: 600;
   font-size: 30px;
 }
 

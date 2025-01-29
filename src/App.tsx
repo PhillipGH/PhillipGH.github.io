@@ -2,8 +2,11 @@ import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
+import Grid from './Grid';
 
-type TDie = { letter: string, faces: string[] };
+export type TDie = { letter: string, faces: string[] };
+
+const TIME_LIMIT = 180;
 
 const ALL_DICE_FACES = [
   'ennnda',
@@ -81,208 +84,56 @@ function chunkArray<T>(arr: T[], columns: number) {
 }, []);
 }
 
-function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElement)[][]) {
-  for (let i = 0; i < dice.length; i++) {
-    for (let j = 0; j < dice[i].length; j++) {
-      if (dice[i][j] === die) {
-        return squareRefs[i][j];
-      }
-    }
-  }
-}
-
-function isValidMove(die: TDie, currentWord: TDie[], dice: TDie[][]) {
-  if (currentWord.length === 0) return true;
-  if (currentWord.includes(die)) return false;
-  for (let i = 0; i < dice.length; i++) {
-    for (let j = 0; j < dice[i].length; j++) {
-      if (dice[i][j] === die) {
-        for (let k = Math.max(i - 1, 0); k <= i + 1 && k < dice.length; k++) {
-          for (let l = Math.max(j - 1, 0); l <= j + 1 && l < dice[k].length; l++) {
-            if (dice[k][l] === currentWord[currentWord.length - 1]) return true;
-          }
-        }
-        return false;
-      }
-    }
-  }
-  return false;
-}
-
-
-function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (d: TDie) => void }) {
-  return (
-    <div className={'letter'} onPointerDown={() => props.onClick(props.die)}>
-      <p className={'keyLetter'} onPointerEnter={() => props.onEnter(props.die)}>{props.die.letter.toUpperCase()}</p>
-      {/* <p className="keyCount">{'(' + props.count + ')'}</p> */}
-    </div>
-  );
-}
-
-function Lines(props: {linesEqs: {ax: number, ay: number, bx: number, by: number}[], fadeOut: boolean}) {
-  return <div id="lines">
-  {props.linesEqs.map((line, i) => 
-    <Line eq={line} fadeOut={props.fadeOut} key={i} />
-    )}
-</div>;
-  
-}
-
-function Line(props :{ fadeOut: boolean, eq : {ax: number, ay: number, bx: number, by: number}}) {
-    let ax = props.eq.ax;
-    let ay = props.eq.ay;
-    let bx = props.eq.bx;
-    let by = props.eq.by;
-
-    if (ax > bx) {
-        bx = ax + bx;
-        ax = bx - ax;
-        bx = bx - ax;
-        by = ay + by;
-        ay = by - ay;
-        by = by - ay;
-    }
-
-    // console.log('ax: ' + ax);
-    // console.log('ay: ' + ay);
-    // console.log('bx: ' + bx);
-    // console.log('by: ' + by);
-
-    var angle = Math.atan((ay - by) / (bx - ax));
-    angle = (angle * 180 / Math.PI);
-    angle = -angle;
-
-    var length = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-    let className = props.fadeOut ? 'lineOrDot line fadeOut' : 'lineOrDot line';
-  return <div className={className} style={{
-    left: ax,
-    top: ay,
-    width: length,
-    height: 15,
-    transform: `rotate(${angle}deg)`,
-    msTransform: `rotate(${angle}deg)`,
-    transformOrigin: '0% 0%',
-    WebkitTransform: `rotate(${angle}deg)`,
-    WebkitTransformOrigin: '0% 0%'
-  }} />;
-} 
-
-function Grid(props: {
-  dice: TDie[][],
-  currentWord: TDie[],
-  setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
-  commitWord: () => void
-} ) {
-  const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
-  const [isMouseDown, setIsMouseDown] = useState(false);
-  let [lines, setLines] = useState<{ax: number, ay: number, bx: number, by: number}[]>([]);
-  useEffect(() => {
-    function onMouseUp() {
-      setIsMouseDown(false);
-      props.commitWord();
-    }
-    window.addEventListener('mouseup', onMouseUp);
-    
-    return () => {
-      window.removeEventListener('mouseup', onMouseUp);
-    }
-  }, [props.currentWord]);
-
-  function getSquares() {
-    if (!squaresRef.current) {
-      // Initialize the Map on first usage.
-      squaresRef.current = props.dice.map((row: TDie[]) => row.map((_die: TDie) => null));
-    }
-    return squaresRef.current;
-  }
-
-  function onClick(die: TDie) {
-    setIsMouseDown(true);
-    setCurrentWord([die]);
-  }
-
-  function onEnter(die: TDie) {
-    if (!isMouseDown) return;
-    if (props.currentWord.length > 1 && props.currentWord[props.currentWord.length - 2] === die) {
-      setCurrentWord(props.currentWord.slice(0, -1));
-      return;
-    }
-    if (!isValidMove(die, props.currentWord, props.dice)) return;
-    setCurrentWord(props.currentWord.concat(die));
-  }
-
-  function setCurrentWord(word: TDie[]) {
-    setLines(calculateLines(word));
-    props.setCurrentWord(word);
-  }
-
-  function calculateLines(word: TDie[]) {
-    if (squaresRef.current === null) return [];
-    const lines : {ax: number, ay: number, bx: number, by: number}[] = [];
-  for (let i = 1; i < word.length; i++) {
-    const prev = word[i - 1];
-    const current = word[i];
-    const prevRef = getSquareRef(prev, props.dice, squaresRef.current);
-    const currentRef = getSquareRef(current, props.dice, squaresRef.current);
-    if (!prevRef || !currentRef) continue;
-    const ax = prevRef.getBoundingClientRect().x + 25;
-    const ay = prevRef.getBoundingClientRect().y+ 25;
-    const bx = currentRef.getBoundingClientRect().x+ 25;
-    const by = currentRef.getBoundingClientRect().y+ 25;
-    lines.push({ax, ay, bx, by});
-  }
-  return lines;
-  }
-
-  return <div className="grid" onPointerUp={() => setIsMouseDown(false)}>
-    {props.dice.map(
-      (row: TDie[], j) =>
-        <div className="gridRow" key={j}>
-          {row.map(
-            (key, i) =>
-              <div ref={(node) => {
-                const list = getSquares();
-                list[j][i] = node;
-              }}>
-              <Square
-                die={key}
-                key={i}
-                onClick={onClick}
-                onEnter={onEnter}
-              />
-              </div>
-          )}
-        </div>)}
-    <Lines linesEqs={lines} fadeOut={props.currentWord.length === 0}/>
-  </div>;
-}
-
 function Board(props: {dictionary: Set<string>}) {
   const columns = 5;
   const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
-  const [lastWord, setLastWord] = useState(<h1></h1>);
+  const [lastWord, setLastWord] = useState('');
   const [score, setScore] = useState<number>(0);
+
+  //timer
+  const [startTime, setStartTime] = useState(0);
+  const [now, setNow] = useState(0);
+  const intervalRef = useRef(0);
+
 
   function commitWord() {
     const word = currentWord.map(d => d.letter).join('');
     if (word.length < 3) {
       setCurrentWord([]);
-      setLastWord(<></>);
+      setLastWord('');
       return;
     }
-    let suffix = null;
+    let suffix = '';
     if (props.dictionary.has(word)) {
       let scoreChange = scoreWord(word);
-      suffix = <p style={{display: 'inline-block'}}>{' +' + scoreChange}</p>;
+      suffix = ' +' + scoreChange;
       setScore(score + scoreChange);
     } else {
-      suffix = <p style={{display: 'inline-block'}}>{String.fromCodePoint(0x1f603)}</p>;
+      suffix = String.fromCodePoint(0x1f6ab);
     }
-    let last = <div><h1 style={{display: 'inline-block'}}>{word}</h1>{suffix}</div>;
+    let last = word.toUpperCase() + suffix;
     setLastWord(last);
     setCurrentWord([]);
   }
+
+  function handleStart() {
+    setStartTime(Date.now());
+    setNow(Date.now());
+
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setNow(Date.now());
+    }, 10);
+  }
+  
+  useEffect(() => {
+    handleStart();
+    return () => {
+      clearInterval(intervalRef.current);
+    };
+  }, []);
+
 
   function fib(n: number): number {
     if (n === 0) return 0;
@@ -295,10 +146,23 @@ function Board(props: {dictionary: Set<string>}) {
   }
 
   let displayWord = currentWord.length > 0 ?
-    <h1>{currentWord.map(d => d.letter).join('')}</h1> :
-    <div className="fadeOut">{lastWord}</div>;
+    <h1>{currentWord.map(d => d.letter).join('').toUpperCase()}</h1> :
+    <h1 className="fadeOut">{lastWord}</h1>;
+  
+  let secondsPassed = Math.round((now - startTime) / 1000);
+  let secondsLeft = TIME_LIMIT - secondsPassed;
+  if (secondsLeft < 0) {
+    clearInterval(intervalRef.current);
+    return <div className="game">
+      <h1>Game Over!</h1>
+      <h2>Score: {score}</h2>
+    </div>;
+  }
+  let minutes = Math.floor(secondsLeft / 60);
+  let seconds = secondsLeft % 60;
 
   return <div className="game">
+    <h1>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
     <div className="currentWord">
     {displayWord}
     </div>
