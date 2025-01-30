@@ -1,4 +1,5 @@
 .noselect {
+  touch-action: none;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
@@ -77,6 +78,8 @@
 .currentWord {
   height: 50px;
   margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 30px;
 }
 
 #lines {
@@ -97,6 +100,8 @@
   /* --height: calc(10 * var(--unit));
   height: var(--height);
   width: var(--height); */
+  height: 40px;
+  width: 40px;
   border-radius: 50%
 }
 

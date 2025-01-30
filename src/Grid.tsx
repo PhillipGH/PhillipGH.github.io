@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState } from 'react'
+import {PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
 import { TDie } from './App';
@@ -32,18 +32,26 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
   }
   
   
-  function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (d: TDie) => void }) {
+  function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void }) {
     return (
-      <div className={'letter'} onPointerDown={() => props.onClick(props.die)}>
+      <div className={'letter'} onPointerDown={(e) => props.onClick(e, props.die)}>
         <div className={'letterDiv'}  onPointerEnter={() => props.onEnter(props.die)}><p className={'keyLetter'}>{props.die.letter.toUpperCase()}</p></div>
         {/* <p className="keyCount">{'(' + props.count + ')'}</p> */}
       </div>
     );
   }
   
-  function Lines(props: {linesEqs: {ax: number, ay: number, bx: number, by: number}[], fadeOut: boolean}) {
+  function Lines(props: {points: {x: number, y: number}[], fadeOut: boolean}) {
+    if (props.points.length === 0) return null;
+    const lines: {ax: number, ay: number, bx: number, by: number}[] = [];
+    for (var i = 1; i < props.points.length; i++) {
+       lines.push({ax: props.points[i - 1].x, ay: props.points[i - 1].y, bx: props.points[i].x, by: props.points[i].y});
+    }
     return <div id="lines">
-    {props.linesEqs.map((line, i) => 
+        <div className={props.fadeOut ? "lineOrDot dot fadeOut" : 'lineOrDot dot'}  style={{
+      left: props.points[0].x - 25,
+      top: props.points[0].y - 25}}></div>
+    {lines.map((line, i) => 
       <Line eq={line} fadeOut={props.fadeOut} key={i} />
       )}
   </div>;
@@ -97,16 +105,16 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
   } ) {
     const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
     const [isMouseDown, setIsMouseDown] = useState(false);
-    let [lines, setLines] = useState<{ax: number, ay: number, bx: number, by: number}[]>([]);
+    let [points, setPoints] = useState<{x: number, y: number}[]>([]);
     useEffect(() => {
       function onMouseUp() {
         setIsMouseDown(false);
         props.commitWord();
       }
-      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('pointerup', onMouseUp);
       
       return () => {
-        window.removeEventListener('mouseup', onMouseUp);
+        window.removeEventListener('pointerup', onMouseUp);
       }
     }, [props.currentWord]);
   
@@ -118,7 +126,10 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
       return squaresRef.current;
     }
   
-    function onClick(die: TDie) {
+    function onClick(e: PointerEvent<HTMLDivElement>,die: TDie) {
+        if ((e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
+            (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+        }
       setIsMouseDown(true);
       setCurrentWord([die]);
     }
@@ -134,27 +145,23 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     }
   
     function setCurrentWord(word: TDie[]) {
-      setLines(calculateLines(word));
+      setPoints(calculatePoints(word));
       props.setCurrentWord(word);
     }
   
-    function calculateLines(word: TDie[]) {
-      if (squaresRef.current === null) return [];
-      const lines : {ax: number, ay: number, bx: number, by: number}[] = [];
-    for (let i = 1; i < word.length; i++) {
-      const prev = word[i - 1];
-      const current = word[i];
-      const prevRef = getSquareRef(prev, props.dice, squaresRef.current);
-      const currentRef = getSquareRef(current, props.dice, squaresRef.current);
-      if (!prevRef || !currentRef) continue;
-      const ax = prevRef.getBoundingClientRect().x + 25;
-      const ay = prevRef.getBoundingClientRect().y+ 25;
-      const bx = currentRef.getBoundingClientRect().x+ 25;
-      const by = currentRef.getBoundingClientRect().y+ 25;
-      lines.push({ax, ay, bx, by});
-    }
-    return lines;
-    }
+      function calculatePoints(word: TDie[]) {
+          if (squaresRef.current === null) return [];
+          const points: { x: number, y: number}[] = [];
+          for (let i = 0; i < word.length; i++) {
+              const current = word[i];
+              const currentRef = getSquareRef(current, props.dice, squaresRef.current);
+              if (!currentRef) continue;
+              const x = currentRef.getBoundingClientRect().x + 25;
+              const y = currentRef.getBoundingClientRect().y + 25;
+              points.push({ x, y });
+          }
+          return points;
+      }
   
     return <div className="grid" onPointerUp={() => setIsMouseDown(false)}>
       {props.dice.map(
@@ -175,7 +182,7 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
                 </div>
             )}
           </div>)}
-      <Lines linesEqs={lines} fadeOut={props.currentWord.length === 0}/>
+      <Lines points={points} fadeOut={props.currentWord.length === 0}/>
     </div>;
   }
 

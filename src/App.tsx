@@ -91,6 +91,8 @@ function Board(props: {dictionary: Set<string>}) {
   const [lastWord, setLastWord] = useState('');
   const [score, setScore] = useState<number>(0);
 
+  const [usedWords, setUsedWords] = useState(new Set<string>());
+
   //timer
   const [startTime, setStartTime] = useState(0);
   const [now, setNow] = useState(0);
@@ -98,17 +100,22 @@ function Board(props: {dictionary: Set<string>}) {
 
 
   function commitWord() {
+    let suffix = '';
     const word = currentWord.map(d => d.letter).join('');
-    if (word.length < 3) {
-      setCurrentWord([]);
-      setLastWord('');
+    if (word.length === 0) {
       return;
     }
-    let suffix = '';
-    if (props.dictionary.has(word)) {
-      let scoreChange = scoreWord(word);
-      suffix = ' +' + scoreChange;
-      setScore(score + scoreChange);
+    if (word.length < 3) {
+      suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
+    } else if (props.dictionary.has(word)) {
+      if (usedWords.has(word)) {
+        suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
+      } else {
+        setUsedWords(new Set(usedWords.add(word)));
+        let scoreChange = scoreWord(word);
+        suffix = ' +' + scoreChange;
+        setScore(score + scoreChange);
+      }
     } else {
       suffix = String.fromCodePoint(0x1f6ab);
     }
@@ -146,8 +153,8 @@ function Board(props: {dictionary: Set<string>}) {
   }
 
   let displayWord = currentWord.length > 0 ?
-    <h1>{currentWord.map(d => d.letter).join('').toUpperCase()}</h1> :
-    <h1 className="fadeOut">{lastWord}</h1>;
+    <p>{currentWord.map(d => d.letter).join('').toUpperCase()}</p> :
+    <p className="fadeOut">{lastWord}</p>;
   
   let secondsPassed = Math.round((now - startTime) / 1000);
   let secondsLeft = TIME_LIMIT - secondsPassed;
@@ -181,3 +188,16 @@ function App() {
 }
 
 export default App
+
+
+/**
+ * Dice Ideas:
+ * alphabet die: on use, move to next letter in the alphabet
+ * upgrade die
+ * x muktiplier die: it's an x and the multipler gains 1 each time it's used
+ * 
+ * 
+ * Relic ideas:
+ * animal die: 20 points if you spell an animal
+ * tines of power: forks your score if you spell tine
+ */
