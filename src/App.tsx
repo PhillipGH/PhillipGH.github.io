@@ -6,7 +6,7 @@ import Grid from './Grid';
 
 export type TDie = { letter: string, faces: string[] };
 
-const TIME_LIMIT = 180;
+const TIME_LIMIT = 10;
 
 const ALL_DICE_FACES = [
   'ennnda',
@@ -84,8 +84,9 @@ function chunkArray<T>(arr: T[], columns: number) {
 }, []);
 }
 
-function Board(props: {dictionary: Set<string>}) {
+function Board(props: {dictionary: Set<string>, level: number, onWin: () => void, onLose: () => void}) {
   const columns = 5;
+  const requiredScore = 1; //10 + 10 * props.level;
   const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
   const [lastWord, setLastWord] = useState('');
@@ -141,6 +142,16 @@ function Board(props: {dictionary: Set<string>}) {
     };
   }, []);
 
+  if (score >= requiredScore) {
+    clearInterval(intervalRef.current);
+    return <div className="game">
+      <h1>Level {props.level} Complete!</h1>
+      <button onClick={() => {
+        props.onWin();
+      }}>Next Level</button>
+    </div>;
+  }
+
 
   function fib(n: number): number {
     if (n === 0) return 0;
@@ -163,12 +174,15 @@ function Board(props: {dictionary: Set<string>}) {
     return <div className="game">
       <h1>Game Over!</h1>
       <h2>Score: {score}</h2>
+      <button onClick={() => {
+        props.onLose();
+      }}>Restart</button>
     </div>;
   }
   let minutes = Math.floor(secondsLeft / 60);
   let seconds = secondsLeft % 60;
 
-  return <div className="game">
+  return <div>
     <h1>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
     <div className="currentWord">
     {displayWord}
@@ -179,13 +193,33 @@ function Board(props: {dictionary: Set<string>}) {
   </div>;
 }
 
+function Game(props: {dictionary: Set<string>}) {
+  const [dice, setDice] = useState<TDie[]>(ALL_DICE);
+  const [level, setLevel] = useState<number>(1);
+  const [internalCounter, setInternalCounter] = useState<number>(1);
+
+  function onWin() { 
+    setLevel(level + 1);
+    setInternalCounter(internalCounter + 1);
+  }
+  function onLose() {
+    setLevel(1);
+    setInternalCounter(internalCounter + 1);
+  }
+
+  return <div className="game">
+    <p>Level {level}</p>
+    <Board key={internalCounter} dictionary={props.dictionary} level={level} onLose={onLose} onWin={onWin}/>
+    </div>;
+}
+
 function App() {
   let [dictionary, setDictionary] = useState(new Set<string>());
   useEffect(() => {
     setDictionary(loadDictionary());
   }, []);
   return <div className="app noselect">
-    <Board dictionary={dictionary}/>
+    <Game dictionary={dictionary}/>
   </div>;
 }
 
