@@ -42,15 +42,24 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
   }
   
   function Lines(props: {points: {x: number, y: number}[], fadeOut: boolean}) {
-    if (props.points.length === 0) return null;
-    const lines: {ax: number, ay: number, bx: number, by: number}[] = [];
-    for (var i = 1; i < props.points.length; i++) {
-       lines.push({ax: props.points[i - 1].x, ay: props.points[i - 1].y, bx: props.points[i].x, by: props.points[i].y});
+    const selfRef = useRef<null|HTMLDivElement>(null);
+    let points = props.points;
+
+    if (points.length === 0) return null;
+    
+    if (selfRef.current !== null) {
+      const offsetX = selfRef.current.getBoundingClientRect().x;
+      const offsetY = selfRef.current.getBoundingClientRect().y;
+      points = points.map(p => ({x: p.x - offsetX, y: p.y - offsetY}));
     }
-    return <div id="lines">
+    const lines: {ax: number, ay: number, bx: number, by: number}[] = [];
+    for (var i = 1; i < points.length; i++) {
+       lines.push({ax: points[i - 1].x, ay: points[i - 1].y, bx: points[i].x, by: points[i].y});
+    }
+    return <div id="lines" ref={selfRef}>
         <div className={props.fadeOut ? "lineOrDot dot fadeOut" : 'lineOrDot dot'}  style={{
-      left: props.points[0].x - 25,
-      top: props.points[0].y - 25}}></div>
+      left: points[0].x - 25,
+      top: points[0].y - 25}}></div>
     {lines.map((line, i) => 
       <Line eq={line} fadeOut={props.fadeOut} key={i} />
       )}
@@ -172,10 +181,9 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
                 <div ref={(node) => {
                   const list = getSquares();
                   list[j][i] = node;
-                }}>
+                }} key={i}>
                 <Square
                   die={key}
-                  key={i}
                   onClick={onClick}
                   onEnter={onEnter}
                 />

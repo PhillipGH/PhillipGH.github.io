@@ -22,9 +22,14 @@
 
 .letterDiv {
   border-radius: 25px;
-  width: 25px;
-  height: 25px;
+  width: 50px;
+  height: 50px;
   display: flex;  
+  justify-content: center;
+  align-items: center;
+}
+
+.grid {
   justify-content: center;
   align-items: center;
 }
@@ -129,4 +134,12 @@ transition: visibility 1s 2s, opacity 2s linear;
   100% {
     opacity: 0;
   }
+}
+
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }

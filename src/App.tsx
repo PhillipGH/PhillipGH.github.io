@@ -173,7 +173,9 @@ function Board(props: {dictionary: Set<string>}) {
     <div className="currentWord">
     {displayWord}
     </div>
-    <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord}/>
+    <div className='container'>
+      <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord}/>
+    </div>
   </div>;
 }
 
