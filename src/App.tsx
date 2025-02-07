@@ -3,10 +3,12 @@ import './App.css'
 import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
 import Grid from './Grid';
+import RewardsPhase from './RewardsPhase';
 
 export type TDie = { letter: string, faces: string[] };
 
 const TIME_LIMIT = 120;
+const EASY_WIN = true;
 
 const ALL_DICE_FACES = [
   'ennnda',
@@ -51,6 +53,9 @@ function rollBoard(dice: TDie[]) {
   dice = dice.map(
     (d) => ({ ...d, 'letter': d.faces[Math.floor(Math.random() * d.faces.length)] }));
   shuffle(dice);
+  if (dice.length > 25) {
+    dice = dice.slice(0, 25);
+  }
   return dice;
 }
 
@@ -84,10 +89,18 @@ function chunkArray<T>(arr: T[], columns: number) {
 }, []);
 }
 
-function Board(props: {dictionary: Set<string>, level: number, onWin: () => void, onLose: () => void}) {
-  const columns = 5;
-  const requiredScore = 5 + 10 * props.level;
-  const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
+function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[], onWin: () => void, onLose: () => void}) {
+  
+
+  let requiredScore = 5 + 10 * props.level;
+  if (EASY_WIN) {
+    requiredScore = 2;
+  }
+  useEffect(() => {
+    const columns = props.inputDice.length < 20 ? 4 : 5;
+    setDice(chunkArray(rollBoard(props.inputDice), columns));
+  }, []);
+  const [dice, setDice] = useState<TDie[][]>([]);
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
   const [lastWord, setLastWord] = useState('');
   const [score, setScore] = useState<number>(0);
@@ -148,7 +161,7 @@ function Board(props: {dictionary: Set<string>, level: number, onWin: () => void
       <h1>Level {props.level} Complete!</h1>
       <button onClick={() => {
         props.onWin();
-      }}>Next Level</button>
+      }}>Continue</button>
     </div>;
   }
 
@@ -200,22 +213,34 @@ function Board(props: {dictionary: Set<string>, level: number, onWin: () => void
 }
 
 function Game(props: {dictionary: Set<string>}) {
-  const [dice, setDice] = useState<TDie[]>(ALL_DICE);
+  const [dice, setDice] = useState<TDie[]>(ALL_DICE.slice(0,16));
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
+  const [phase, setPhase] = useState<'board'|'rewards'>('board');
 
   function onWin() { 
     setLevel(level + 1);
     setInternalCounter(internalCounter + 1);
+    setPhase('rewards');
   }
   function onLose() {
     setLevel(1);
     setInternalCounter(internalCounter + 1);
   }
 
+  let content = <div/>;
+  if (phase === 'board') {
+    content = <Board key={internalCounter} dictionary={props.dictionary} level={level} onLose={onLose} onWin={onWin} inputDice={dice}/>;
+  } else if (phase === 'rewards') {
+    content = <RewardsPhase choices={ALL_DICE.slice(0,3)} onChoice={(die) => {
+      setDice([...dice, die]);
+      setPhase('board');
+    }}/>;
+  }
+
   return <div className="game">
     <p>Level {level}</p>
-    <Board key={internalCounter} dictionary={props.dictionary} level={level} onLose={onLose} onWin={onWin}/>
+      {content}
     </div>;
 }
 
