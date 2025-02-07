@@ -123,7 +123,7 @@ transition: visibility 1s 2s, opacity 2s linear;
 } */
 
 .fadeOut {
-  animation: fadeOut ease 5s;
+  animation: fadeOut linear 1s;
   animation-fill-mode: forwards;
 }
 
@@ -142,4 +142,32 @@ transition: visibility 1s 2s, opacity 2s linear;
   align-items: center;
   justify-content: center;
   width: 100%;
+}
+
+#progressbar {
+  background-color: rgb(64, 64, 64);
+  border-radius: 13px;
+  /* (height of inner div) / 2 + padding */
+  padding: 3px;
+  position:relative;
+}
+
+#progressbar>div {
+  background-color: #646cff;
+  width: 0.5%;
+  /* Adjust with JavaScript */
+  height: 20px;
+  border-radius: 10px;
+  position:relative;
+}
+
+
+#progressbar>center {
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
+  margin:auto;
+  color:aliceblue;
 }

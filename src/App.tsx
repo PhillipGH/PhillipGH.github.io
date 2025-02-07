@@ -6,7 +6,7 @@ import Grid from './Grid';
 
 export type TDie = { letter: string, faces: string[] };
 
-const TIME_LIMIT = 10;
+const TIME_LIMIT = 120;
 
 const ALL_DICE_FACES = [
   'ennnda',
@@ -86,7 +86,7 @@ function chunkArray<T>(arr: T[], columns: number) {
 
 function Board(props: {dictionary: Set<string>, level: number, onWin: () => void, onLose: () => void}) {
   const columns = 5;
-  const requiredScore = 1; //10 + 10 * props.level;
+  const requiredScore = 5 + 10 * props.level;
   const [dice, setDice] = useState<TDie[][]>(chunkArray(rollBoard(ALL_DICE), columns));
   const [currentWord, setCurrentWord] = useState<TDie[]>([]);
   const [lastWord, setLastWord] = useState('');
@@ -182,13 +182,19 @@ function Board(props: {dictionary: Set<string>, level: number, onWin: () => void
   let minutes = Math.floor(secondsLeft / 60);
   let seconds = secondsLeft % 60;
 
+  let progress = (score / requiredScore) * 100;
+
   return <div>
     <h1>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
+    <div id="progressbar">
+      <div style={{width: progress + '%'}}></div>
+      <center><label>{score} / {requiredScore}</label></center>
+    </div>
     <div className="currentWord">
-    {displayWord}
+      {displayWord}
     </div>
     <div className='container'>
-      <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord}/>
+      <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} />
     </div>
   </div>;
 }
@@ -231,6 +237,7 @@ export default App
  * alphabet die: on use, move to next letter in the alphabet
  * upgrade die
  * x muktiplier die: it's an x and the multipler gains 1 each time it's used
+ * ! factorial die: if you end a word a with the ! you get factorial points but the letters explode!!
  * 
  * 
  * Relic ideas:
