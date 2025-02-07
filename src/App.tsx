@@ -4,39 +4,10 @@ import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
 import Grid from './Grid';
 import RewardsPhase from './RewardsPhase';
-
-export type TDie = { letter: string, faces: string[] };
+import { ADDITIONAL_DICE, STARTER_DICE, TDie } from './Dice';
 
 const TIME_LIMIT = 120;
 const EASY_WIN = true;
-
-const ALL_DICE_FACES = [
-  'ennnda',
-  'titiei',
-  'ipcelt',
-  'eeeema',
-  'eeeeaa',
-  'afiysr',
-  'nemnga',
-  'rihprv',
-  'tttome',
-  'nesuss',
-  'wrovgr',
-  'cpiest',
-  'iypfrs',
-  'teliic',
-  'ugeema',
-  'rasaaf',
-  'nhdtoh',
-  'ouotnw',
-  'rddonl',
-  'wnccts',
-  'xzkqjb',
-  'hhrldo',
-  'touoot',
-  'isfraa',
-  'nrlhdo'
-];
 
 function loadDictionary() {
   let dictionary = new Set<string>();
@@ -45,8 +16,6 @@ function loadDictionary() {
   });
   return dictionary;
 }
-
-const ALL_DICE: TDie[] = ALL_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces]}));
 
 function rollBoard(dice: TDie[]) {
   // returns a randomized array of dice
@@ -213,7 +182,7 @@ function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[]
 }
 
 function Game(props: {dictionary: Set<string>}) {
-  const [dice, setDice] = useState<TDie[]>(ALL_DICE.slice(0,16));
+  const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
   const [phase, setPhase] = useState<'board'|'rewards'>('board');
@@ -232,7 +201,7 @@ function Game(props: {dictionary: Set<string>}) {
   if (phase === 'board') {
     content = <Board key={internalCounter} dictionary={props.dictionary} level={level} onLose={onLose} onWin={onWin} inputDice={dice}/>;
   } else if (phase === 'rewards') {
-    content = <RewardsPhase choices={ALL_DICE.slice(0,3)} onChoice={(die) => {
+    content = <RewardsPhase choices={ADDITIONAL_DICE} onChoice={(die) => {
       setDice([...dice, die]);
       setPhase('board');
     }}/>;

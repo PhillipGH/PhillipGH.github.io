@@ -1,7 +1,7 @@
 import {PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { TDie } from './App';
+import { TDie } from './Dice';
 
 function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElement)[][]) {
     for (let i = 0; i < dice.length; i++) {
