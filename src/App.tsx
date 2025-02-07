@@ -4,10 +4,10 @@ import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
 import Grid from './Grid';
 import RewardsPhase from './RewardsPhase';
-import { ADDITIONAL_DICE, STARTER_DICE, TDie } from './Dice';
+import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 
 const TIME_LIMIT = 120;
-const EASY_WIN = true;
+const EASY_WIN = false;
 
 function loadDictionary() {
   let dictionary = new Set<string>();
@@ -59,9 +59,7 @@ function chunkArray<T>(arr: T[], columns: number) {
 }
 
 function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[], onWin: () => void, onLose: () => void}) {
-  
-
-  let requiredScore = 5 + 10 * props.level;
+  let requiredScore = 5 + 6 * props.level;
   if (EASY_WIN) {
     requiredScore = 2;
   }
@@ -95,7 +93,7 @@ function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[]
         suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
       } else {
         setUsedWords(new Set(usedWords.add(word)));
-        let scoreChange = scoreWord(word);
+        let scoreChange = scoreWord(word, currentWord);
         suffix = ' +' + scoreChange;
         setScore(score + scoreChange);
       }
@@ -141,8 +139,22 @@ function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[]
     return fib(n - 1) + fib(n - 2);
   }
 
-  function scoreWord(word: string) {
-    return word.length > 2 ? fib(word.length - 2) : 0;
+  function scoreWord(word: string, dice: TDie[]) {
+    let multiplier = 1;
+    let bonus = 0;
+    if (dice[0].bonus === DiceBonus.B_PLUS2) {
+      bonus += 2;
+    }
+    for (let i = 0; i < dice.length; i++) {
+      if (dice[i].bonus === DiceBonus.B_2X) {
+        multiplier *= 2;
+      }
+      if (dice[i].bonus === DiceBonus.B_3X) {
+        multiplier *= 3;
+      }
+    }
+    const baseScore = word.length > 2 ? fib(word.length - 2) : 0;
+    return (baseScore + bonus) * multiplier;
   }
 
   let displayWord = currentWord.length > 0 ?
@@ -185,7 +197,7 @@ function Game(props: {dictionary: Set<string>}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
-  const [phase, setPhase] = useState<'board'|'rewards'>('board');
+  const [phase, setPhase] = useState<'board'|'rewards'>('rewards');
 
   function onWin() { 
     setLevel(level + 1);
@@ -194,7 +206,9 @@ function Game(props: {dictionary: Set<string>}) {
   }
   function onLose() {
     setLevel(1);
+    setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
+    setPhase('rewards');
   }
 
   let content = <div/>;

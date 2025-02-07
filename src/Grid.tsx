@@ -31,12 +31,11 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     return false;
   }
   
-  
   function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void }) {
     return (
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, props.die)}>
         <div className={'letterDiv'}  onPointerEnter={() => props.onEnter(props.die)}><p className={'keyLetter'}>{props.die.letter.toUpperCase()}</p></div>
-        {/* <p className="keyCount">{'(' + props.count + ')'}</p> */}
+        {props.die.bonus ? <p className="bonus letterBonus">{props.die.bonus}</p>: null}
       </div>
     );
   }
