@@ -58,6 +58,20 @@ function chunkArray<T>(arr: T[], columns: number) {
 }, []);
 }
 
+function getNRandom<T>(arr: T[], n: number): T[] {
+  var result = new Array(n),
+      len = arr.length,
+      taken = new Array(len);
+  if (n > len)
+      throw new RangeError("getRandom: more elements taken than available");
+  while (n--) {
+      var x = Math.floor(Math.random() * len);
+      result[n] = arr[x in taken ? taken[x] : x];
+      taken[x] = --len in taken ? taken[len] : len;
+  }
+  return result;
+}
+
 function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[], onWin: () => void, onLose: () => void}) {
   let requiredScore = 5 + 6 * props.level;
   if (EASY_WIN) {
@@ -215,7 +229,7 @@ function Game(props: {dictionary: Set<string>}) {
   if (phase === 'board') {
     content = <Board key={internalCounter} dictionary={props.dictionary} level={level} onLose={onLose} onWin={onWin} inputDice={dice}/>;
   } else if (phase === 'rewards') {
-    content = <RewardsPhase choices={ADDITIONAL_DICE} onChoice={(die) => {
+    content = <RewardsPhase choices={getNRandom(ADDITIONAL_DICE, 3)} onChoice={(die) => {
       setDice([...dice, die]);
       setPhase('board');
     }}/>;

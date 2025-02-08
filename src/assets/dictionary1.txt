@@ -40905,6 +40905,7 @@ pensioning
 pensions
 pensive
 pensively
+pent
 pentagon
 pentagonal
 pentagons
@@ -57314,6 +57315,7 @@ teamwork
 teapot
 teapots
 tear
+teared
 tearaway
 tearaways
 teardrop

@@ -15,10 +15,10 @@ const STARTER_DICE_FACES = [
     'nemnga',
     'rihprv',
     'tttome',
-    //'nesuss',
+    //'nesuss', // a instead of u
     'wrovgr',
     //'cpiest',
-    //'iypfrs',
+    //'iypfrs', // x2
     'teliic',
     'ugeema',
     //'rasaaf',
@@ -26,8 +26,8 @@ const STARTER_DICE_FACES = [
     'ouotnw',
     'rddonl',
     //'wnccts',
-    //'xzkqjb',
-    //'hhrldo',
+    //'xzkqjb', 3x
+    //'hhrldo', // +2
     'touoot',
     //'isfraa',
     'nrlhdo'
@@ -35,9 +35,12 @@ const STARTER_DICE_FACES = [
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null}));
 
 export const ADDITIONAL_DICE: TDie[] = [
-    {faces: ['ing', 'qu', 'er', 'ir', 'ed', 'ion'], bonus: DiceBonus.B_2X},
+    {faces: ['ing', 'qu', 'er', 'ir', 'ed', 'ion'], bonus: null},
     {faces: ['x', 'z', 'k', 'q', 'j', 'b'], bonus: DiceBonus.B_3X},
     {faces: ['h', 'h', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS2},
+    {faces: ['s', 's', 's', 'e', 'n', 'a'], bonus: null},
+    {faces: ['i', 'y', 'p', 'f', 'r', 'c'], bonus: DiceBonus.B_2X},
+    {faces: ['w', 'n', 'c', 'c', 't', 's'], bonus: DiceBonus.B_PLUS2},
 ].map(d => ({letter: d.faces[0], ...d}));
 
 /*
