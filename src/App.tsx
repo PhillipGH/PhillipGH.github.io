@@ -4,7 +4,7 @@ import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
 import Grid from './Grid';
 import RewardsPhase from './RewardsPhase';
-import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
+import { ADDITIONAL_DICE, DiceBonus, nextAlphabetLetter, STARTER_DICE, TDie } from './Dice';
 
 const TIME_LIMIT = 120;
 const EASY_WIN = false;
@@ -110,6 +110,16 @@ function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[]
         let scoreChange = scoreWord(word, currentWord);
         suffix = ' +' + scoreChange;
         setScore(score + scoreChange);
+        for (let i = 0; i < currentWord.length;i++) {
+          let die = currentWord[i];
+          switch (die.bonus) {
+            case DiceBonus.B_ALPHABET:
+              die.letter = nextAlphabetLetter(die.letter);
+              setDice([...dice]);
+              break;
+          }
+        }
+
       }
     } else {
       suffix = String.fromCodePoint(0x1f6ab);
@@ -160,11 +170,16 @@ function Board(props: {dictionary: Set<string>, level: number, inputDice: TDie[]
       bonus += 2;
     }
     for (let i = 0; i < dice.length; i++) {
-      if (dice[i].bonus === DiceBonus.B_2X) {
-        multiplier *= 2;
-      }
-      if (dice[i].bonus === DiceBonus.B_3X) {
-        multiplier *= 3;
+      switch (dice[i].bonus) {
+        case DiceBonus.B_2X:
+          multiplier *= 2;
+          break;
+        case DiceBonus.B_3X:
+          multiplier *= 3;
+          break;
+        case DiceBonus.B_ALPHABET:
+          multiplier *= 2;
+          break;
       }
     }
     const baseScore = word.length > 2 ? fib(word.length - 2) : 0;

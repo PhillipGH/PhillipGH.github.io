@@ -1,7 +1,7 @@
 import {PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { TDie } from './Dice';
+import { getSquareBonusDisplay, TDie } from './Dice';
 
 function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElement)[][]) {
     for (let i = 0; i < dice.length; i++) {
@@ -35,7 +35,7 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     return (
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, props.die)}>
         <div className={'letterDiv'}  onPointerEnter={() => props.onEnter(props.die)}><p className={'keyLetter'}>{props.die.letter.toUpperCase()}</p></div>
-        {props.die.bonus ? <p className="bonus letterBonus">{props.die.bonus}</p>: null}
+        {props.die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(props.die)}</p>: null}
       </div>
     );
   }

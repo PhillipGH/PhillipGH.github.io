@@ -1,12 +1,17 @@
 import {PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { TDie } from './Dice';
+import { getDiceBonusText, TDie } from './Dice';
 
 function Die(props: { die: TDie}) {
+    let bonus : React.JSX.Element | null = null;
+    if (props.die.bonus) {
+        const text = getDiceBonusText(props.die.bonus);
+        bonus = <div className="bonus"><p>{text.title}</p><br/><p>{text.description}</p></div>;
+    }
     return <div className='die'>
         {props.die.faces.map((face, i) => <div key={i} className='face'>{face}</div>)}
-        {props.die.bonus ? <p className="bonus">{props.die.bonus}</p>: null}
+        {bonus}
     </div>
 }
 
