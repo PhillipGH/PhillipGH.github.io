@@ -95,20 +95,24 @@ function Board(props: {
         if (usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
-          setUsedWords(new Set(usedWords.add(word)));
-          let scoreChange = scoreWord(word, currentWord);
-          suffix = ' +' + scoreChange;
-          setScore(score + scoreChange);
-          for (let i = 0; i < currentWord.length;i++) {
-            let die = currentWord[i];
-            switch (die.bonus) {
-              case DiceBonus.B_ALPHABET:
-                die.letter = nextAlphabetLetter(die.letter);
-                setDice([...dice]);
-                break;
+            setUsedWords(new Set(usedWords.add(word)));
+            let scoreChange = scoreWord(word, currentWord);
+            suffix = ' +' + scoreChange;
+            setScore(score + scoreChange);
+            for (let i = 0; i < currentWord.length; i++) {
+                let die = currentWord[i];
+                switch (die.bonus) {
+                    case DiceBonus.B_ALPHABET:
+                        die.letter = nextAlphabetLetter(die.letter);
+                        setDice([...dice]);
+                        break;
+                    case DiceBonus.B_MULTIPLIER_COUNTER:
+                        die.counter = (die.counter || 1) + 1;
+                        setDice([...dice]);
+                        break;
+                }
             }
-          }
-  
+
         }
       } else {
         suffix = String.fromCodePoint(0x1f6ab);
@@ -153,26 +157,29 @@ function Board(props: {
     }
   
     function scoreWord(word: string, dice: TDie[]) {
-      let multiplier = 1;
-      let bonus = 0;
-      if (dice[0].bonus === DiceBonus.B_PLUS2) {
-        bonus += 2;
-      }
-      for (let i = 0; i < dice.length; i++) {
-        switch (dice[i].bonus) {
-          case DiceBonus.B_2X:
-            multiplier *= 2;
-            break;
-          case DiceBonus.B_3X:
-            multiplier *= 3;
-            break;
-          case DiceBonus.B_ALPHABET:
-            multiplier *= 2;
-            break;
+        let multiplier = 1;
+        let bonus = 0;
+        if (dice[0].bonus === DiceBonus.B_PLUS2) {
+            bonus += 2;
         }
-      }
-      const baseScore = word.length > 2 ? fib(word.length - 2) : 0;
-      return (baseScore + bonus) * multiplier;
+        for (let i = 0; i < dice.length; i++) {
+            switch (dice[i].bonus) {
+                case DiceBonus.B_2X:
+                    multiplier *= 2;
+                    break;
+                case DiceBonus.B_3X:
+                    multiplier *= 3;
+                    break;
+                case DiceBonus.B_ALPHABET:
+                    multiplier *= 2;
+                    break;
+                case DiceBonus.B_MULTIPLIER_COUNTER:
+                    multiplier *= (dice[i].counter || 1);
+                    break;
+            }
+        }
+        const baseScore = word.length > 2 ? fib(word.length - 2) : 0;
+        return (baseScore + bonus) * multiplier;
     }
   
     let displayWord = currentWord.length > 0 ?
@@ -204,7 +211,7 @@ function Board(props: {
       }}>Reroll ({props.rerollCounter})</button>;
     }
     return <div>
-      <h1>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
+      <h1 className="timer">{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
       <div id="progressbar">
         <div style={{width: progress + '%'}}></div>
         <center><label>{score} / {requiredScore}</label></center>

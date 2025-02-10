@@ -2,7 +2,7 @@ import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
-import RewardsPhase from './RewardsPhase';
+import RewardsPhase, { DiceView } from './RewardsPhase';
 import { ADDITIONAL_DICE, DiceBonus, nextAlphabetLetter, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 
@@ -30,9 +30,10 @@ function getNRandom<T>(arr: T[], n: number): T[] {
 
 function Game(props: {dictionary: Set<string>}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
+  const [choices, setChoices] = useState<TDie[]>(getNRandom(ADDITIONAL_DICE, 3));
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
-  const [phase, setPhase] = useState<'board'|'rewards'>('rewards');
+  const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
 
 
@@ -40,16 +41,19 @@ function Game(props: {dictionary: Set<string>}) {
     setLevel(level + 1);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
+    setChoices(getNRandom(ADDITIONAL_DICE, 3));
   }
   function onLose() {
     setLevel(1);
     setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
+    setChoices(getNRandom(ADDITIONAL_DICE, 3));
     setRerollCounter(null);
   }
 
   let content = <div/>;
+  let viewButton : React.JSX.Element | null = null;
   if (phase === 'board') {
     content =
     <Board
@@ -62,19 +66,27 @@ function Game(props: {dictionary: Set<string>}) {
       setRerollCounter={setRerollCounter}
     />;
   } else if (phase === 'rewards') {
-    content = <RewardsPhase choices={getNRandom(ADDITIONAL_DICE, 3)} onChoice={(die) => {
+    content = <RewardsPhase choices={choices} onChoice={(die) => {
       setDice([...dice, die]);
       setPhase('board');
       switch (die.bonus) {
         case DiceBonus.B_1_REROLL:
-          setRerollCounter(rerollCounter || 0 + 1);
+          setRerollCounter((rerollCounter || 0) + 1);
+          break;
+        case DiceBonus.B_2_REROLL:
+          setRerollCounter((rerollCounter || 0) + 2);
           break;
       }
     }}/>;
+    viewButton = <button onClick={() => {setPhase('view_dice')}}>Dice</button>
+  } else if (phase === 'view_dice') {
+    content = <DiceView dice={dice}/>;
+    viewButton = <button onClick={() => {setPhase('rewards')}}>Back</button>
   }
 
-  return <div className="game">
+  return <div className={phase === 'view_dice' ? "game" : "game noselect"}>
     <p>Level {level}</p>
+      {viewButton}
       {content}
     </div>;
 }
@@ -84,7 +96,7 @@ function App() {
   useEffect(() => {
     setDictionary(loadDictionary());
   }, []);
-  return <div className="app noselect">
+  return <div className="app">
     <Game dictionary={dictionary}/>
   </div>;
 }
@@ -103,4 +115,13 @@ export default App
  * Relic ideas:
  * animal die: 20 points if you spell an animal
  * tines of power: forks your score if you spell tine
+ * 
+ * todo make sure reroll button visible mobile
+ * better view dice button
+ * animate dice choice
+ * animate getting points/bar tween
+ * letter analysis tool?
+ * wildcard -1 die
+ * 
+ * 
  */

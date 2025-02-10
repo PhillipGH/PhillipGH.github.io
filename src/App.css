@@ -9,6 +9,12 @@
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
+.app {
+  max-width: 400px;
+  padding: 10px;
+  overflow-y: hidden
+}
+
 .letter {
   border-radius: 8px;
   width: 50px;
@@ -82,6 +88,11 @@
   margin-bottom: 20px;
   font-weight: 600;
   font-size: 30px;
+  margin: 0px;
+}
+
+.timer {
+  margin: 2px;
 }
 
 #lines {
@@ -184,6 +195,13 @@ transition: visibility 1s 2s, opacity 2s linear;
   display: flex;
   justify-content: left;
   align-items: center;
+}
+
+.bonus>h3 {
+  margin: 3px;
+}
+.bonus>p {
+  margin: 3px;
 }
 
 .reward {

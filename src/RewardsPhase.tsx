@@ -7,22 +7,35 @@ function Die(props: { die: TDie}) {
     let bonus : React.JSX.Element | null = null;
     if (props.die.bonus) {
         const text = getDiceBonusText(props.die.bonus);
-        bonus = <div className="bonus"><p>{text.title}</p><br/><p>{text.description}</p></div>;
+        bonus = <div className="bonus"><h3>{text.title}</h3><p>{text.description}</p></div>;
     }
-    return <div className='die'>
+    return <div><div className='die'>
         {props.die.faces.map((face, i) => <div key={i} className='face'>{face}</div>)}
+        </div>
         {bonus}
+        
     </div>
 }
 
-function RewardsPhase(props: {choices: TDie[], onChoice: (die: TDie) => void}) {
-    return <div className="rewardsPhase">
-    <h2>Choose your bounty!</h2>
-    {props.choices.map((die, i) =>
+export function DiceView(props: {dice: TDie[]}) {
+    return <div id="rewardsPhase">
+    <h2>Current Dice:</h2>
+    {props.dice.map((die, i) =>
         <div key={i} className='reward'>
             <Die key={i} die={die} />
-            <button onClick={() => {props.onChoice(die);}}>choose</button>
         </div>
+    )}
+  </div>;
+}
+
+function RewardsPhase(props: {choices: TDie[], onChoice: (die: TDie) => void}) {
+    return <div id="rewardsPhase">
+    <h2>Add a New Die!</h2>
+    {props.choices.map((die, i) =>
+        <button key={i} className='reward' onClick={() => {props.onChoice(die);}}>
+            <Die key={i} die={die} />
+            {/* <button onClick={() => {props.onChoice(die);}}>choose</button> */}
+        </button>
     )}
   </div>;
 }
