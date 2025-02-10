@@ -87,7 +87,7 @@ export const ADDITIONAL_DICE: TDie[] = [
     {faces: ['i', 'y', 'p', 'f', 'r', 'c'], bonus: DiceBonus.B_2X},
     {faces: ['w', 'n', 'c', 'c', 't', 's'], bonus: DiceBonus.B_PLUS2},
     {faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET},
-    // {faces: ['c', 'p', 'i', 'e', 's', 't'], bonus: DiceBonus.B_1_REROLL},
+    {faces: ['c', 'p', 'i', 'e', 's', 't'], bonus: DiceBonus.B_1_REROLL},
 ].map(d => ({letter: d.faces[0], ...d}));
 
 /*
