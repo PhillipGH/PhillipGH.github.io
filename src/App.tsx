@@ -78,14 +78,14 @@ function Game(props: {dictionary: Set<string>}) {
           break;
       }
     }}/>;
-    viewButton = <button onClick={() => {setPhase('view_dice')}}>Dice</button>
+    viewButton = <button id='viewDice' onClick={() => {setPhase('view_dice')}}>Dice</button>
   } else if (phase === 'view_dice') {
     content = <DiceView dice={dice}/>;
-    viewButton = <button onClick={() => {setPhase('rewards')}}>Back</button>
+    viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>
   }
 
   return <div className={phase === 'view_dice' ? "game" : "game noselect"}>
-    <p>Level {level}</p>
+      <p>Level {level}</p>
       {viewButton}
       {content}
     </div>;

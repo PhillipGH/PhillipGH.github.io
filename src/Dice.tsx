@@ -84,7 +84,7 @@ export function getDiceBonusText(bonus: DiceBonus): {title: string, description:
         case DiceBonus.B_2_REROLL:
             return {title: '+2 rerolls', description: '+2 board reroll charge'};
         case DiceBonus.B_ALPHABET:
-            return {title: 'a → b', description: '2x word score and changes to the next letter in the alphabet.'};
+            return {title: '2x and a → b', description: '2x word score and changes to the next letter in the alphabet.'};
         case DiceBonus.B_MULTIPLIER_COUNTER:
             return {title: 'multiplier', description: 'word score multiplier increases by 1 with each word'};
         default:

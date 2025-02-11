@@ -150,6 +150,7 @@ transition: visibility 1s 2s, opacity 2s linear;
   align-items: center;
   justify-content: center;
   width: 100%;
+  margin-bottom: 12px;
 }
 
 #progressbar {
@@ -158,6 +159,7 @@ transition: visibility 1s 2s, opacity 2s linear;
   /* (height of inner div) / 2 + padding */
   padding: 3px;
   position:relative;
+  overflow: hidden;
 }
 
 #progressbar>div {
@@ -167,8 +169,12 @@ transition: visibility 1s 2s, opacity 2s linear;
   height: 20px;
   border-radius: 10px;
   position:relative;
+  float: left;
+  -webkit-transition: width 250ms ease;
+	-moz-transition: width 250ms ease;
+	-o-transition: width 250ms ease;
+	transition: width 250ms ease;
 }
-
 
 #progressbar>center {
   position:absolute;
@@ -218,4 +224,20 @@ transition: visibility 1s 2s, opacity 2s linear;
 .bonus {
   font-size: 10px;
   color: #646cff;
+}
+
+#viewDice {
+  float:right;
+}
+
+#letterTable {
+  width: 50%
+}
+
+#letterTable>tr:nth-of-type(odd) {
+  background-color:#ededed;
+}
+
+#letterTable>tr>th {
+  text-align: left;
 }

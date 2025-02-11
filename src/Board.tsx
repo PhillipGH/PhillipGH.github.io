@@ -192,7 +192,7 @@ function Board(props: {
       clearInterval(intervalRef.current);
       return <div className="game">
         <h1>Game Over!</h1>
-        <h2>Score: {score}</h2>
+        <h2>Level {props.level} - Score {score}/{requiredScore}</h2>
         <button onClick={() => {
           props.onLose();
         }}>Restart</button>
@@ -222,7 +222,6 @@ function Board(props: {
       <div className='container'>
         <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} />
       </div>
-      <br />
       {rerollButton}
     </div>;
   }
