@@ -35,6 +35,7 @@ function Game(props: {dictionary: Set<string>}) {
   const [internalCounter, setInternalCounter] = useState<number>(1);
   const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
+  const [dieRecieved, setDieRecieved] = useState<boolean>(false);
   const timeoutRef = useRef(0);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ function Game(props: {dictionary: Set<string>}) {
 
   function onChooseReward(die: TDie) {
       setPhase('board');
+      setDieRecieved(false);
       switch (die.bonus) {
         case DiceBonus.B_1_REROLL:
           setRerollCounter((rerollCounter || 0) + 1);
@@ -88,12 +90,13 @@ function Game(props: {dictionary: Set<string>}) {
     content = <RewardsPhase choices={choices} onChoice={(die) => {
       const timer = setTimeout(() => {
         setDice([...dice, die]);
+        setDieRecieved(true);
           setTimeout(() => {
             onChooseReward(die);
           }, 500);
       }, 1370);
     }}/>;
-    viewButton = <button id='viewDice' onClick={() => {setPhase('view_dice')}}>Dice ({dice.length})</button>
+    viewButton = <button id='viewDice' className={dieRecieved ? 'gainDie' : ''} onClick={() => {setPhase('view_dice')}}>Dice ({dice.length})</button>
   } else if (phase === 'view_dice') {
     content = <DiceView dice={dice}/>;
     viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>

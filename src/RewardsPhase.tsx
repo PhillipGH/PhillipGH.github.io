@@ -3,21 +3,23 @@ import './App.css'
 import React from 'react';
 import { getDiceBonusText, TDie } from './Dice';
 
-function Die(props: { die: TDie, chosen?: boolean }) {
+function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);
     let bonus: React.JSX.Element | null = null;
     if (props.die.bonus) {
         const text = getDiceBonusText(props.die.bonus);
         bonus = <div className="bonus"><h3>{text.title}</h3><p>{text.description}</p></div>;
     }
-    let style = {} as React.CSSProperties;
     if (props.chosen && selfRef.current !== null) {
         const offsetY = selfRef.current.getBoundingClientRect().y;
+        const offsetX = document.getElementById('viewDice')?.getBoundingClientRect().x;
+        console.log(offsetX);
         //style = {"--height-offset": -offsetY } as React.CSSProperties;
         document.documentElement.style.setProperty("--height-offset", -offsetY +'px');
+        document.documentElement.style.setProperty("--width-offset", offsetX +'px');
     }
     return <div ref={selfRef}>
-        <div className={props.chosen ? 'die assembled' : 'die'} style={style}>
+        <div className={props.chosen ? 'die assembled' : 'die'}>
             {props.die.faces.map((face, i) => <div key={i} className='face'>{face.toUpperCase()}</div>)}
         </div>
         {props.chosen && <div style={{width:333.6, height: 55.6}}></div>}

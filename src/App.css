@@ -212,8 +212,8 @@ transition: visibility 1s 2s, opacity 2s linear;
 @keyframes dieRotate {
   0% {transform:rotate3d(0,0,0, 0);}
   40% {transform:rotate3d(2, -1, -1, -0.2turn);}
-  95% {transform: translateX(190px) translateY(calc(var(--height-offset) + 50px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.1, 0.1, 0.1 )}
-  100% {transform: translateX(190px) translateY(calc(var(--height-offset) + 50px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.0001, 0.0001, 0.0001 )}
+  95% {transform: translateX(calc(var(--width-offset) - 120px)) translateY(calc(var(--height-offset) + 60px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.1, 0.1, 0.1 )}
+  100% {transform: translateX(calc(var(--width-offset) - 120px)) translateY(calc(var(--height-offset) + 60px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.0001, 0.0001, 0.0001 )}
 }
 
 .die.assembled .face:nth-child(1) {
@@ -300,6 +300,15 @@ transition: visibility 1s 2s, opacity 2s linear;
 
 #viewDice {
   float:right;
+  color: #646cff;
+}
+
+.gainDie {
+  animation: gainDieKeyframes 0.25s;
+}
+
+@keyframes gainDieKeyframes {
+  50% {transform: scale(1.5);}
 }
 
 #letterTable {
