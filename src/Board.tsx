@@ -82,21 +82,29 @@ function Board(props: {
     const [now, setNow] = useState(0);
     const intervalRef = useRef(0);
 
-    function wordIsInDictionary(word: string): string | null {
+    function wordIsInDictionary(word: string, ref = {isUsed: false}): string | null {
         if (props.dictionary.has(word)) {
             return word;
         }
         const index = word.indexOf('*')
-        if (index > -1){
+        let usedWord : string | null = null;
+        if (index > -1){ 
             const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
             for (let i = 0; i < alphabet.length; i++) {
-                let result = wordIsInDictionary(word.replace('*',alphabet[i]));
+                const ref2  = {isUsed: false};
+                let result = wordIsInDictionary(word.replace('*',alphabet[i]), ref2);
                 if (result) {
-                    return result;
+                    if (ref2.isUsed || usedWords.has(result)) {
+                        ref.isUsed = true;
+                        usedWord = result;
+                    } else {
+                        ref.isUsed = false;
+                        return result;
+                    }
                 }
             }
         }
-        return null;
+        return usedWord;
     }
   
   
