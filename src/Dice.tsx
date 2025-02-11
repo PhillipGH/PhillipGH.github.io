@@ -51,6 +51,7 @@ export const ADDITIONAL_DICE: TDie[] = [
     {faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1},
     {faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL},
     {faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS1},
+    {faces: ['a/b', 'e/f', 'i/j', 'o/k', 'u/y', 'a/z'], bonus: null},
 ].map(d => ({letter: d.faces[0], ...d}));
 
 export function getSquareBonusDisplay(die: TDie): string {

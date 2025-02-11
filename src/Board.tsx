@@ -86,13 +86,18 @@ function Board(props: {
         if (props.dictionary.has(word)) {
             return word;
         }
-        const index = word.indexOf('*')
+        const index = word.search(/\/|\*/);         
         let usedWord : string | null = null;
-        if (index > -1){ 
-            const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+        if (index > -1) { 
+            let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+            let regex = /\*/;
+            if (word[index] === '/') {
+                alphabet = [word[index - 1], word[index + 1]];
+                regex = /[a-z]\/[a-z]/;
+            }
             for (let i = 0; i < alphabet.length; i++) {
                 const ref2  = {isUsed: false};
-                let result = wordIsInDictionary(word.replace('*',alphabet[i]), ref2);
+                let result = wordIsInDictionary(word.replace(regex, alphabet[i]), ref2);
                 if (result) {
                     if (ref2.isUsed || usedWords.has(result)) {
                         ref.isUsed = true;

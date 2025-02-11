@@ -10,7 +10,7 @@ function Die(props: { die: TDie }) {
         bonus = <div className="bonus"><h3>{text.title}</h3><p>{text.description}</p></div>;
     }
     return <div><div className='die'>
-        {props.die.faces.map((face, i) => <div key={i} className='face'>{face}</div>)}
+        {props.die.faces.map((face, i) => <div key={i} className='face'>{face.toUpperCase()}</div>)}
     </div>
         {bonus}
 
