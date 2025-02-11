@@ -6,6 +6,7 @@ export enum DiceBonus {
     B_2_REROLL = '+2 reroll',
     B_ALPHABET = 'alphabet',
     B_MULTIPLIER_COUNTER = 'multiplier counter',
+    B_MINUS1 = '-1',
   }
 export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number };
 
@@ -34,7 +35,7 @@ const STARTER_DICE_FACES = [
     //'hhrldo', // +2
     'touoot',
     //'isfraa',
-    'nrlhdo'
+    'nrlhdo',
 ];
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null}));
 
@@ -49,6 +50,7 @@ export const ADDITIONAL_DICE: TDie[] = [
     {faces: ['c', 'p', 'i', 'e', 's', 't'], bonus: DiceBonus.B_1_REROLL},
     {faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1},
     {faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL},
+    {faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS1},
 ].map(d => ({letter: d.faces[0], ...d}));
 
 export function getSquareBonusDisplay(die: TDie): string {
@@ -66,6 +68,8 @@ export function getSquareBonusDisplay(die: TDie): string {
             return '2x  ' + die.letter + ' → ' + nextAlphabetLetter(die.letter);
         case DiceBonus.B_MULTIPLIER_COUNTER:
             return '(x' + die.counter + ')';
+        case DiceBonus.B_MINUS1:
+            return '-1';
         default:
             return '';
     }
@@ -87,6 +91,8 @@ export function getDiceBonusText(bonus: DiceBonus): {title: string, description:
             return {title: '2x and a → b', description: '2x word score and changes to the next letter in the alphabet.'};
         case DiceBonus.B_MULTIPLIER_COUNTER:
             return {title: 'multiplier', description: 'word score multiplier increases by 1 with each word'};
+        case DiceBonus.B_MINUS1:
+            return {title: '-1', description: '-1 point for word'};
         default:
             throw new Error('unknown bonus type');
     }

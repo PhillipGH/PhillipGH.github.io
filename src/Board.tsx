@@ -81,17 +81,36 @@ function Board(props: {
     const [startTime, setStartTime] = useState(0);
     const [now, setNow] = useState(0);
     const intervalRef = useRef(0);
+
+    function wordIsInDictionary(word: string): string | null {
+        if (props.dictionary.has(word)) {
+            return word;
+        }
+        const index = word.indexOf('*')
+        if (index > -1){
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+            for (let i = 0; i < alphabet.length; i++) {
+                let result = wordIsInDictionary(word.replace('*',alphabet[i]));
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
   
   
     function commitWord() {
       let suffix = '';
-      const word = currentWord.map(d => d.letter).join('');
+      let word = currentWord.map(d => d.letter).join('');
+      let finalWord : string | null = null;
       if (word.length === 0) {
         return;
       }
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
-      } else if (props.dictionary.has(word)) {
+      } else if (finalWord = wordIsInDictionary(word)) {
+        word = finalWord;
         if (usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
@@ -159,6 +178,7 @@ function Board(props: {
     function scoreWord(word: string, dice: TDie[]) {
         let multiplier = 1;
         let bonus = 0;
+        let penalty = 0;
         if (dice[0].bonus === DiceBonus.B_PLUS2) {
             bonus += 2;
         }
@@ -176,10 +196,13 @@ function Board(props: {
                 case DiceBonus.B_MULTIPLIER_COUNTER:
                     multiplier *= (dice[i].counter || 1);
                     break;
+                case DiceBonus.B_MINUS1:
+                    penalty += 1;
+                    break;
             }
         }
         const baseScore = word.length > 2 ? fib(word.length - 2) : 0;
-        return (baseScore + bonus) * multiplier;
+        return (baseScore + bonus) * multiplier - penalty;
     }
   
     let displayWord = currentWord.length > 0 ?
