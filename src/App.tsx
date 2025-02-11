@@ -35,6 +35,13 @@ function Game(props: {dictionary: Set<string>}) {
   const [internalCounter, setInternalCounter] = useState<number>(1);
   const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
+  const timeoutRef = useRef(0);
+
+  useEffect(() => {
+        return () => {
+          clearTimeout(timeoutRef.current);
+        };
+      }, []);
 
 
   function onWin() { 
@@ -52,6 +59,18 @@ function Game(props: {dictionary: Set<string>}) {
     setRerollCounter(null);
   }
 
+  function onChooseReward(die: TDie) {
+      setPhase('board');
+      switch (die.bonus) {
+        case DiceBonus.B_1_REROLL:
+          setRerollCounter((rerollCounter || 0) + 1);
+          break;
+        case DiceBonus.B_2_REROLL:
+          setRerollCounter((rerollCounter || 0) + 2);
+          break;
+      }
+  }
+
   let content = <div/>;
   let viewButton : React.JSX.Element | null = null;
   if (phase === 'board') {
@@ -67,18 +86,14 @@ function Game(props: {dictionary: Set<string>}) {
     />;
   } else if (phase === 'rewards') {
     content = <RewardsPhase choices={choices} onChoice={(die) => {
-      setDice([...dice, die]);
-      setPhase('board');
-      switch (die.bonus) {
-        case DiceBonus.B_1_REROLL:
-          setRerollCounter((rerollCounter || 0) + 1);
-          break;
-        case DiceBonus.B_2_REROLL:
-          setRerollCounter((rerollCounter || 0) + 2);
-          break;
-      }
+      const timer = setTimeout(() => {
+        setDice([...dice, die]);
+          setTimeout(() => {
+            onChooseReward(die);
+          }, 500);
+      }, 1370);
     }}/>;
-    viewButton = <button id='viewDice' onClick={() => {setPhase('view_dice')}}>Dice</button>
+    viewButton = <button id='viewDice' onClick={() => {setPhase('view_dice')}}>Dice ({dice.length})</button>
   } else if (phase === 'view_dice') {
     content = <DiceView dice={dice}/>;
     viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>

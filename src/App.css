@@ -205,37 +205,39 @@ transition: visibility 1s 2s, opacity 2s linear;
 }
 
 .die.assembled {
-  animation: dieRotate 5s;
+  animation: dieRotate 1.5s ease-in forwards;
+  position: absolute;
 }
 
 @keyframes dieRotate {
   0% {transform:rotate3d(0,0,0, 0);}
-  25% {transform:rotate3d(2, -1, -1, -0.2turn);}
-  100% {transform: translateX(200px) translateY(-200px) rotate3d(2, -1, -1, -0.5turn)}
+  40% {transform:rotate3d(2, -1, -1, -0.2turn);}
+  95% {transform: translateX(190px) translateY(calc(var(--height-offset) + 50px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.1, 0.1, 0.1 )}
+  100% {transform: translateX(190px) translateY(calc(var(--height-offset) + 50px)) rotate3d(2, -1, -1, -0.5turn) scale3d( 0.0001, 0.0001, 0.0001 )}
 }
 
 .die.assembled .face:nth-child(1) {
-  animation: face1Left 5s;
+  animation: face1Left 2s;
 }
 
 .die.assembled .face:nth-child(2) {
-  animation: face2Front 5s;
+  animation: face2Front 2s;
 }
 
 .die.assembled .face:nth-child(3) {
-  animation: face3Right 5s;
+  animation: face3Right 2s;
 }
 
 .die.assembled .face:nth-child(4) {
-  animation: face4Back 5s;
+  animation: face4Back 2s;
 }
 
 .die.assembled .face:nth-child(5) {
-  animation: face5Top 5s;
+  animation: face5Top 2s;
 }
 
 .die.assembled .face:nth-child(6) {
-  animation: face6Bottom 5s;
+  animation: face6Bottom 2s;
 }
 
 @keyframes face1Left {
