@@ -88,10 +88,10 @@ function Game(props: {dictionary: Set<string>}) {
     />;
   } else if (phase === 'rewards') {
     content = <RewardsPhase choices={choices} onChoice={(die) => {
-      const timer = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setDice([...dice, die]);
         setDieRecieved(true);
-          setTimeout(() => {
+          timeoutRef.current = setTimeout(() => {
             onChooseReward(die);
           }, 500);
       }, 1370);
