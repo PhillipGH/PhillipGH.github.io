@@ -116,12 +116,8 @@ export default App
  * animal die: 20 points if you spell an animal
  * tines of power: forks your score if you spell tine
  * 
- * todo make sure reroll button visible mobile
- * better view dice button
+ * todo
  * animate dice choice
- * animate getting points/bar tween
- * letter analysis tool?
- * wildcard -1 die
  * 
  * 
  */
