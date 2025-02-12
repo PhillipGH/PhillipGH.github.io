@@ -13,7 +13,6 @@ function Die(props: { die: TDie, chosen?: boolean}) {
     if (props.chosen && selfRef.current !== null) {
         const offsetY = selfRef.current.getBoundingClientRect().y;
         const offsetX = document.getElementById('viewDice')?.getBoundingClientRect().x;
-        console.log(offsetX);
         //style = {"--height-offset": -offsetY } as React.CSSProperties;
         document.documentElement.style.setProperty("--height-offset", -offsetY +'px');
         document.documentElement.style.setProperty("--width-offset", offsetX +'px');

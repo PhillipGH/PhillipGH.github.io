@@ -3,22 +3,45 @@ import { DiceBonus, nextAlphabetLetter, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
 
-const TIME_LIMIT = 120;
 const EASY_WIN = false;
 
+/*
+for (let i = 3; i <= 10; i++) {
+  console.log(i, fib(i - 2), i - 3 + fib(i-2)*3);
+}
+  */
+
+
+function fib(n: number): number {
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  return fib(n - 1) + fib(n - 2);
+}
+
+
+
 function chunkArray<T>(arr: T[], columns: number) {
-    return arr.reduce<T[][]>((resultArray, item, index) => {
+  const result = arr.reduce<(T | null)[][]>((resultArray, item, index) => {
     const chunkIndex = Math.floor(index / columns)
-  
+
     if (!resultArray[chunkIndex]) {
-      resultArray[chunkIndex] = [] // start a new chunk
+      resultArray[chunkIndex] = []; // start a new chunk
     }
-  
-    resultArray[chunkIndex].push(item)
-  
-    return resultArray
+
+    resultArray[chunkIndex].push(item);
+
+    return resultArray;
   }, []);
+
+  // center the bottom
+  if (result[0].length - result[result.length - 1].length > 1) {
+    result[result.length - 1].unshift(null);
+    if (result[0].length === 5 && result[result.length - 1].length === 2) {
+      result[result.length - 1].unshift(null);
+    }
   }
+  return result;
+}
 
   function shuffle<T>(array: T[]) {
     let currentIndex = array.length;
@@ -58,7 +81,8 @@ function Board(props: {
     rerollCounter: number | null,
     setRerollCounter: (n: number|null) => void
   }) {
-    let requiredScore = 5 + 6 * props.level;
+    let requiredScore = 18 + 18 * props.level;
+    const TimeLimit = 105 + props.level * 5;
     if (EASY_WIN) {
       requiredScore = 2;
     }
@@ -69,11 +93,14 @@ function Board(props: {
     }
     useEffect(() => {
       reroll();
+      return () => clearTimeout(timeoutRef.current);
     }, []);
-    const [dice, setDice] = useState<TDie[][]>([]);
+    const [dice, setDice] = useState<(TDie | null)[][]>([]);
     const [currentWord, setCurrentWord] = useState<TDie[]>([]);
     const [lastWord, setLastWord] = useState('');
     const [score, setScore] = useState<number>(0);
+    const [isRotating, setIsRotating] = useState(false);
+    const timeoutRef = useRef(0);
   
     const [usedWords, setUsedWords] = useState(new Set<string>());
   
@@ -181,41 +208,35 @@ function Board(props: {
       </div>;
     }
   
-  
-    function fib(n: number): number {
-      if (n === 0) return 0;
-      if (n === 1) return 1;
-      return fib(n - 1) + fib(n - 2);
-    }
-  
     function scoreWord(word: string, dice: TDie[]) {
         let multiplier = 1;
         let bonus = 0;
         let penalty = 0;
-        if (dice[0].bonus === DiceBonus.B_PLUS2) {
-            bonus += 2;
+        if (dice[0].bonus === DiceBonus.B_PLUS4) {
+            bonus += 4;
         }
         for (let i = 0; i < dice.length; i++) {
             switch (dice[i].bonus) {
                 case DiceBonus.B_2X:
                     multiplier *= 2;
                     break;
-                case DiceBonus.B_3X:
-                    multiplier *= 3;
+                case DiceBonus.B_15X:
+                    multiplier *= 1.5;
                     break;
                 case DiceBonus.B_ALPHABET:
-                    multiplier *= 2;
+                    multiplier *= 1.5;
                     break;
                 case DiceBonus.B_MULTIPLIER_COUNTER:
                     multiplier *= (dice[i].counter || 1);
                     break;
-                case DiceBonus.B_MINUS1:
-                    penalty += 1;
+                case DiceBonus.B_MINUS3:
+                    penalty += 3;
                     break;
             }
         }
-        const baseScore = word.length > 2 ? fib(word.length - 2) : 0;
-        return (baseScore + bonus) * multiplier - penalty;
+
+        const baseScore = word.length - 3 + fib(word.length-2) * 3 ;
+        return Math.round((baseScore + bonus) * multiplier - penalty);
     }
   
     let displayWord = currentWord.length > 0 ?
@@ -223,7 +244,7 @@ function Board(props: {
       <p className="fadeOut">{lastWord}</p>;
     
     let secondsPassed = Math.round((now - startTime) / 1000);
-    let secondsLeft = TIME_LIMIT - secondsPassed;
+    let secondsLeft = TimeLimit - secondsPassed;
     if (secondsLeft < 0) {
       clearInterval(intervalRef.current);
       return <div className="game">
@@ -238,6 +259,16 @@ function Board(props: {
     let seconds = secondsLeft % 60;
   
     let progress = (score / requiredScore) * 100;
+
+    const rotateButton = <button disabled={isRotating} onClick={() => {
+      setIsRotating(true);
+      clearTimeout(timeoutRef.current);
+      setDice(dice[0].map((val, index) => dice.map(row => row[index]).reverse()));
+      timeoutRef.current = setTimeout(() => {
+        setIsRotating(false);
+      }, 250);
+      
+    }}>Rotate</button>;
   
     let rerollButton : null | React.JSX.Element = null;
     if  (props.rerollCounter !== null) {
@@ -247,6 +278,9 @@ function Board(props: {
       }}>Reroll ({props.rerollCounter})</button>;
     }
     return <div>
+      <div style={{float: 'right'}}>{rotateButton}
+      {rerollButton}</div>
+            
       <h1 className="timer">{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
       <div id="progressbar">
         <div style={{width: progress + '%'}}></div>
@@ -256,9 +290,8 @@ function Board(props: {
         {displayWord}
       </div>
       <div className='container'>
-        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} />
+        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} />
       </div>
-      {rerollButton}
     </div>;
   }
 

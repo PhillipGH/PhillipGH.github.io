@@ -3,7 +3,7 @@ import './App.css'
 import React from 'react';
 import { getSquareBonusDisplay, TDie } from './Dice';
 
-function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElement)[][]) {
+function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTMLDivElement)[][]) {
     for (let i = 0; i < dice.length; i++) {
       for (let j = 0; j < dice[i].length; j++) {
         if (dice[i][j] === die) {
@@ -13,7 +13,7 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     }
   }
   
-  function isValidMove(die: TDie, currentWord: TDie[], dice: TDie[][]) {
+  function isValidMove(die: TDie, currentWord: TDie[], dice: (TDie | null)[][]) {
     if (currentWord.length === 0) return true;
     if (currentWord.includes(die)) return false;
     for (let i = 0; i < dice.length; i++) {
@@ -31,11 +31,24 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     return false;
   }
   
-  function Square(props: { die: TDie, onEnter: (d: TDie) => void, onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void }) {
+  function Square(props: {
+    die: TDie | null,
+    isRotating: boolean,
+    onEnter: (d: TDie) => void,
+    onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
+  }) {
+    if (props.die == null) {
+      return <div className={'letterSpacer'}> </div>;
+    }
+    const die : TDie = props.die;
     return (
-      <div className={'letter'} onPointerDown={(e) => props.onClick(e, props.die)}>
-        <div className={'letterDiv'}  onPointerEnter={() => props.onEnter(props.die)}><p className={'keyLetter'}>{props.die.letter.toUpperCase()}</p></div>
-        {props.die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(props.die)}</p>: null}
+      <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
+        <div
+          className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
+          onPointerEnter={() => props.onEnter(die)}>
+            <p className={'keyLetter'}>{die.letter.toUpperCase()}</p>
+        </div>
+        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
       </div>
     );
   }
@@ -106,8 +119,9 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
   } 
   
   function Grid(props: {
-    dice: TDie[][],
+    dice: (TDie | null)[][],
     currentWord: TDie[],
+    isRotating: boolean,
     setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
     commitWord: () => void
   } ) {
@@ -129,7 +143,7 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
     function getSquares() {
       if (!squaresRef.current) {
         // Initialize the Map on first usage.
-        squaresRef.current = props.dice.map((row: TDie[]) => row.map((_die: TDie) => null));
+        squaresRef.current = props.dice.map((row: (TDie | null)[]) => row.map((_die: (TDie | null)) => null));
       }
       return squaresRef.current;
     }
@@ -171,9 +185,9 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
           return points;
       }
   
-    return <div className="grid" onPointerUp={() => setIsMouseDown(false)}>
+    return <div className={props.isRotating ? "grid groatate" :"grid"} onPointerUp={() => setIsMouseDown(false)}>
       {props.dice.map(
-        (row: TDie[], j) =>
+        (row: (TDie | null)[], j) =>
           <div className="gridRow" key={j}>
             {row.map(
               (key, i) =>
@@ -183,6 +197,7 @@ function getSquareRef(die: TDie, dice: TDie[][], squareRefs: (null|HTMLDivElemen
                 }} key={i}>
                 <Square
                   die={key}
+                  isRotating={props.isRotating}
                   onClick={onClick}
                   onEnter={onEnter}
                 />
