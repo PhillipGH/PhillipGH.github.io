@@ -40,12 +40,12 @@ const STARTER_DICE_FACES = [
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null}));
 
 export const ADDITIONAL_DICE: TDie[] = [
-    {faces: ['ing', 'qu', 'er', 'ir', 'ed', 'ion'], bonus: null},
-    {faces: ['x', 'z', 'k', 'q', 'j', 'b'], bonus: DiceBonus.B_3X},
+    {faces: ['ing', 'th', 'er', 'in', 'ed', 'ion'], bonus: null},
+    {faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_3X},
     {faces: ['h', 'h', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS2},
     {faces: ['s', 's', 's', 'e', 'n', 'a'], bonus: null},
-    {faces: ['i', 'y', 'p', 'f', 'r', 'c'], bonus: DiceBonus.B_2X},
-    {faces: ['w', 'n', 'c', 'c', 't', 's'], bonus: DiceBonus.B_PLUS2},
+    {faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_2X},
+    {faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS2},
     {faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET},
     {faces: ['c', 'p', 'i', 'e', 's', 't'], bonus: DiceBonus.B_1_REROLL},
     {faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1},
