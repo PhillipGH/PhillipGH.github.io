@@ -124,7 +124,7 @@ function Board(props: {
 
     let requiredScore = 18 + 18 * props.level;
     const TimeLimit = 105 + props.level * 5 + timeBonus;
-    //const TimeLimit = 40 + props.level * 5 + timeBonus;
+    //const TimeLimit = 20 + props.level * 5 + timeBonus;
     if (EASY_WIN) {
       requiredScore = 2;
     }
@@ -235,6 +235,19 @@ function Board(props: {
         clearInterval(intervalRef.current);
       };
     }, []);
+
+    useEffect(() => {
+      let secondsPassed = Math.round((now - startTime) / 1000);
+      let secondsLeft = TimeLimit - secondsPassed;
+      if (secondsLeft < 0) {
+        clearInterval(intervalRef.current);
+        props.stats.currentLevel = props.level;
+        props.stats.currentLevelRequiredScore = requiredScore;
+        props.stats.currentLevelScore = score;
+        props.setStats(props.stats);
+        props.onLose();
+      }
+    }, [now, startTime, timeBonus, score]);
   
     if (score >= requiredScore) {
       clearInterval(intervalRef.current);
@@ -286,22 +299,6 @@ function Board(props: {
     
     let secondsPassed = Math.round((now - startTime) / 1000);
     let secondsLeft = TimeLimit - secondsPassed;
-    if (secondsLeft < 0) {
-      clearInterval(intervalRef.current);
-      return <div className="game">
-        <h1>Game Over!</h1>
-        <button onClick={() => {
-          props.onLose();
-        }}>Restart</button>
-        <GameStatsView
-          currentLevel={props.level}
-          currentLevelRequiredScore={requiredScore}
-          currentLevelScore={score}
-          stats={props.stats}
-          dice={props.inputDice}
-          />
-      </div>;
-    }
     let minutes = Math.floor(secondsLeft / 60);
     let seconds = secondsLeft % 60;
 

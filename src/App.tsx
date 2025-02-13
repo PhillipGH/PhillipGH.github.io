@@ -5,7 +5,7 @@ import dictionaryRaw from './assets/dictionary1.txt?raw'
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { ADDITIONAL_DICE, DiceBonus, nextAlphabetLetter, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
-import { TGameStats } from './GameStats';
+import GameStatsView, { TGameStats } from './GameStats';
 
 function loadDictionary() {
   let dictionary = new Set<string>();
@@ -34,7 +34,7 @@ function Game(props: {dictionary: Set<string>}) {
   const [choices, setChoices] = useState<TDie[]>(getNRandom(ADDITIONAL_DICE, 3));
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
-  const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice'>('rewards');
+  const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice' | 'stats'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
   const [stats, setStats] = useState<TGameStats>({
@@ -42,6 +42,9 @@ function Game(props: {dictionary: Set<string>}) {
     longestWord: '',
     highestWordScoreWord: '',
     highestWordScore: 0,
+    currentLevel: 0,
+    currentLevelScore: 0,
+    currentLevelRequiredScore: 0,
   });
   const timeoutRef = useRef(0);
 
@@ -59,6 +62,10 @@ function Game(props: {dictionary: Set<string>}) {
     setChoices(getNRandom(ADDITIONAL_DICE, 3));
   }
   function onLose() {
+    setPhase('stats');
+  }
+
+  function onRestart() {
     setLevel(1);
     setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
@@ -109,9 +116,12 @@ function Game(props: {dictionary: Set<string>}) {
   } else if (phase === 'view_dice') {
     content = <DiceView dice={dice}/>;
     viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>
+  } else if (phase === 'stats') {
+    content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;
   }
 
-  return <div className={phase === 'view_dice' ? "game" : "game noselect"}>
+  const allowScroll = phase === 'view_dice' || phase === 'stats';
+  return <div className={allowScroll ? "game" : "game noselect"}>
       <p>Level {level}</p>
       {viewButton}
       {content}
