@@ -11,6 +11,8 @@ export enum DiceBonus {
   }
 export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number };
 
+export const REROLL_TIME_BONUS = 30;
+
 const STARTER_DICE_FACES = [
     //'ennnda',
     'titiei',
@@ -48,9 +50,9 @@ export const ADDITIONAL_DICE: TDie[] = [
     {faces: ['ch', 'ch', 'th', 'sh', 'ck', 'ck'], bonus: DiceBonus.B_1_REROLL},
     {faces: ['a/b', 'e/f', 'h/i', 'o/k', 'u/y', 'a/y'], bonus: DiceBonus.B_1_REROLL},
     {faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL},
-    {faces: ['p', 's', 't', 'c', 'e', 'i'], bonus: DiceBonus.B_2_REROLL},
+    {faces: ['p', 's', 't', 'c', 'e', 'm'], bonus: DiceBonus.B_2_REROLL},
 
-    {faces: ['h', 'h', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4},
+    {faces: ['h', 'm', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4},
     {faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS4},
     {faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS4},
 
@@ -77,7 +79,7 @@ export function getSquareBonusDisplay(die: TDie): string {
         case DiceBonus.B_2_REROLL:
             return '';
         case DiceBonus.B_ALPHABET:
-            return '1.5x  ' + die.letter + ' → ' + nextAlphabetLetter(die.letter);
+            return '1.5x  ' + die.letter + '→' + nextAlphabetLetter(die.letter);
         case DiceBonus.B_MULTIPLIER_COUNTER:
             return '(x' + die.counter + ')';
         case DiceBonus.B_MINUS3:
@@ -98,11 +100,11 @@ export function getDiceBonusText(bonus: DiceBonus): {title: string, description:
         case DiceBonus.B_PLUS4:
             return {title: '+4 starter', description: '+4 points for words starting with this die'};
         case DiceBonus.B_1_REROLL:
-            return {title: '+1 reroll', description: '+1 board reroll charge'};
+            return {title: '+1 reroll', description: '+1 board reroll charge (reroll charges reroll the board and give +'+ REROLL_TIME_BONUS +' seconds'};
         case DiceBonus.B_2_REROLL:
-            return {title: '+2 rerolls', description: '+2 board reroll charges'};
+            return {title: '+2 rerolls', description: '+2 board reroll charges (reroll charges reroll the board and give +'+ REROLL_TIME_BONUS +' seconds'};
         case DiceBonus.B_ALPHABET:
-            return {title: '2x and a → b', description: '2x word score and changes to the next letter in the alphabet.', hasSideEffect: true};
+            return {title: '1.5x and a → b', description: '1.5x word score and changes to the next letter in the alphabet.', hasSideEffect: true};
         case DiceBonus.B_MULTIPLIER_COUNTER:
             return {title: 'multiplier', description: 'word score multiplier increases by 1 with each word', hasSideEffect: true};
         case DiceBonus.B_MINUS3:

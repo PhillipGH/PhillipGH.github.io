@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DiceBonus, nextAlphabetLetter, TDie } from "./Dice";
+import { DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
 
@@ -90,12 +90,14 @@ function Board(props: {
     rerollCounter: number | null,
     setRerollCounter: (n: number|null) => void
   }) {
-    let requiredScore = 18 + 18 * props.level;
-    const TimeLimit = 105 + props.level * 5;
-    if (EASY_WIN) {
-      requiredScore = 2;
-    }
+    
   
+    function useRerollCharge() {
+      setTimeBonus(timeBonus + REROLL_TIME_BONUS);
+      props.setRerollCounter((props.rerollCounter || 1) - 1);
+      reroll();
+    }
+
     function reroll() {
       const columns = props.inputDice.length < 20 ? 4 : 5;
       setDice(chunkArray(rollBoard(props.inputDice), columns));
@@ -110,6 +112,7 @@ function Board(props: {
     const [score, setScore] = useState<number>(0);
     const [isRotating, setIsRotating] = useState(false);
     const timeoutRef = useRef(0);
+    const [timeBonus, setTimeBonus] = useState(0);
   
     const [usedWords, setUsedWords] = useState(new Set<string>());
   
@@ -117,6 +120,13 @@ function Board(props: {
     const [startTime, setStartTime] = useState(0);
     const [now, setNow] = useState(0);
     const intervalRef = useRef(0);
+
+    let requiredScore = 18 + 18 * props.level;
+    //const TimeLimit = 105 + props.level * 5 + timeBonus;
+    const TimeLimit = 40 + props.level * 5 + timeBonus;
+    if (EASY_WIN) {
+      requiredScore = 2;
+    }
 
     function wordIsInDictionary(word: string, ref = {isUsed: false}): string | null {
         if (props.dictionary.has(word)) {
@@ -196,10 +206,11 @@ function Board(props: {
       setLastWord(last);
       setCurrentWord([]);
     }
-  
+
     function handleStart() {
       setStartTime(Date.now());
       setNow(Date.now());
+      const start = Date.now();
   
       clearInterval(intervalRef.current);
       intervalRef.current = setInterval(() => {
@@ -276,6 +287,11 @@ function Board(props: {
     }
     let minutes = Math.floor(secondsLeft / 60);
     let seconds = secondsLeft % 60;
+
+    const timerHueProgress = Math.min(secondsLeft, 45) / 45.0;
+    const timerHue = timerHueProgress * 120;
+    const timerSaturationProgress = 1 - Math.min(secondsLeft, 45) / 45.0;
+    const timerSaturation = timerSaturationProgress * 70.0 + 30.0;
   
     let progress = (score / requiredScore) * 100;
 
@@ -293,15 +309,13 @@ function Board(props: {
     let rerollButton : null | React.JSX.Element = null;
     if  (props.rerollCounter !== null) {
       rerollButton = <button disabled={props.rerollCounter <= 0} onClick={() => {
-        props.setRerollCounter((props.rerollCounter || 1) - 1);
-        reroll();
-      }}>Reroll ({props.rerollCounter})</button>;
+        useRerollCharge();
+      }}>Reroll +30s ({props.rerollCounter})</button>;
     }
     return <div>
-      <div style={{float: 'right'}}>{rotateButton}
-      {rerollButton}</div>
+      <div style={{float: 'right'}}>{rerollButton}{rotateButton}</div>
             
-      <h1 className="timer">{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
+      <h1 className="timer" style={{color:'hsl('+ timerHue +', ' + timerSaturation + '%, 50%)'}}>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
       <div id="progressbar">
         <div style={{width: progress + '%'}}></div>
         <center><label>{score} / {requiredScore}</label></center>

@@ -93,7 +93,7 @@ function Game(props: {dictionary: Set<string>}) {
         setDieRecieved(true);
           timeoutRef.current = setTimeout(() => {
             onChooseReward(die);
-          }, 500);
+          }, 340);
       }, 1370);
     }}/>;
     viewButton = <button id='viewDice' className={dieRecieved ? 'gainDie' : ''} onClick={() => {setPhase('view_dice')}}>Dice ({dice.length})</button>

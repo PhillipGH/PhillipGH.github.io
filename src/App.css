@@ -342,6 +342,7 @@ transition: visibility 1s 2s, opacity 2s linear;
   right: 0;
   bottom: 0;
   margin: 1px;
+  pointer-events: none;
 }
 
 .bonus {
