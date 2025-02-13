@@ -5,6 +5,7 @@ import dictionaryRaw from './assets/dictionary1.txt?raw'
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { ADDITIONAL_DICE, DiceBonus, nextAlphabetLetter, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
+import { TGameStats } from './GameStats';
 
 function loadDictionary() {
   let dictionary = new Set<string>();
@@ -36,6 +37,12 @@ function Game(props: {dictionary: Set<string>}) {
   const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
+  const [stats, setStats] = useState<TGameStats>({
+    totalWords: 0,
+    longestWord: '',
+    highestWordScoreWord: '',
+    highestWordScore: 0,
+  });
   const timeoutRef = useRef(0);
 
   useEffect(() => {
@@ -85,6 +92,8 @@ function Game(props: {dictionary: Set<string>}) {
       inputDice={dice}
       rerollCounter={rerollCounter}
       setRerollCounter={setRerollCounter}
+      stats={stats}
+      setStats={setStats}
     />;
   } else if (phase === 'rewards') {
     content = <RewardsPhase choices={choices} onChoice={(die) => {

@@ -3,7 +3,7 @@ import './App.css'
 import React from 'react';
 import { getDiceBonusText, TDie } from './Dice';
 
-function Die(props: { die: TDie, chosen?: boolean}) {
+export function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);
     let bonus: React.JSX.Element | null = null;
     if (props.die.bonus) {
@@ -41,7 +41,7 @@ export function DiceView(props: { dice: TDie[] }) {
 
     return <div id="rewardsPhase">
         <h2>Letter Breakdown:</h2>
-        <table id='letterTable'>
+        <table id='letterTable'><tbody>
             <tr>
                 <th>Letter</th>
                 <th># of Dice</th>
@@ -51,7 +51,7 @@ export function DiceView(props: { dice: TDie[] }) {
                 <td>{r.count}</td>
             </tr>)}
 
-        </table>
+        </tbody></table>
         <h2>Current Dice:</h2>
         {props.dice.slice(0).reverse().map((die, i) =>
             <div key={i} className='reward'>

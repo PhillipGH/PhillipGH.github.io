@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
+import GameStatsView, { TGameStats } from "./GameStats";
 
 const EASY_WIN = false;
 
@@ -88,10 +89,10 @@ function Board(props: {
     onWin: () => void,
     onLose: () => void,
     rerollCounter: number | null,
-    setRerollCounter: (n: number|null) => void
+    setRerollCounter: (n: number|null) => void,
+    stats: TGameStats,
+    setStats: (n: TGameStats) => void
   }) {
-    
-  
     function useRerollCharge() {
       setTimeBonus(timeBonus + REROLL_TIME_BONUS);
       props.setRerollCounter((props.rerollCounter || 1) - 1);
@@ -122,8 +123,8 @@ function Board(props: {
     const intervalRef = useRef(0);
 
     let requiredScore = 18 + 18 * props.level;
-    //const TimeLimit = 105 + props.level * 5 + timeBonus;
-    const TimeLimit = 40 + props.level * 5 + timeBonus;
+    const TimeLimit = 105 + props.level * 5 + timeBonus;
+    //const TimeLimit = 40 + props.level * 5 + timeBonus;
     if (EASY_WIN) {
       requiredScore = 2;
     }
@@ -177,6 +178,16 @@ function Board(props: {
             let scoreChange = scoreWord(word, currentWord);
             suffix = ' +' + scoreChange;
             setScore(score + scoreChange);
+
+            props.stats.totalWords++;
+            if (word.length > props.stats.longestWord.length)
+              props.stats.longestWord = word;
+            if (scoreChange > props.stats.highestWordScore) {
+              props.stats.highestWordScore = scoreChange;
+              props.stats.highestWordScoreWord = word;
+            }
+            props.setStats(props.stats);
+
             let rerollWord = false;
             for (let i = 0; i < currentWord.length; i++) {
                 let die = currentWord[i];
@@ -279,10 +290,16 @@ function Board(props: {
       clearInterval(intervalRef.current);
       return <div className="game">
         <h1>Game Over!</h1>
-        <h2>Level {props.level} - Score {score}/{requiredScore}</h2>
         <button onClick={() => {
           props.onLose();
         }}>Restart</button>
+        <GameStatsView
+          currentLevel={props.level}
+          currentLevelRequiredScore={requiredScore}
+          currentLevelScore={score}
+          stats={props.stats}
+          dice={props.inputDice}
+          />
       </div>;
     }
     let minutes = Math.floor(secondsLeft / 60);
