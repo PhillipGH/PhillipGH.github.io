@@ -70,6 +70,15 @@ function chunkArray<T>(arr: T[], columns: number) {
     return dice;
   }
 
+  // changes die to a different letter, if possible
+  function rerollDie(die: TDie) {
+    let faces = die.faces.filter(c => c != die.letter);
+    if (faces.length === 0) {
+      faces = die.faces;
+    }
+    die.letter = faces[Math.floor(Math.random() * faces.length)];
+  }
+
 
 
 function Board(props: {
@@ -158,6 +167,7 @@ function Board(props: {
             let scoreChange = scoreWord(word, currentWord);
             suffix = ' +' + scoreChange;
             setScore(score + scoreChange);
+            let rerollWord = false;
             for (let i = 0; i < currentWord.length; i++) {
                 let die = currentWord[i];
                 switch (die.bonus) {
@@ -169,9 +179,15 @@ function Board(props: {
                         die.counter = (die.counter || 1) + 1;
                         setDice([...dice]);
                         break;
+                    case DiceBonus.B_REROLL_WORD:
+                      rerollWord = true;
+                      break;
                 }
             }
-
+            if (rerollWord) {
+              currentWord.map(die => rerollDie(die));
+              setDice([...dice]);
+            }
         }
       } else {
         suffix = String.fromCodePoint(0x1f6ab);
@@ -232,6 +248,9 @@ function Board(props: {
                 case DiceBonus.B_MINUS3:
                     penalty += 3;
                     break;
+                case DiceBonus.B_REROLL_WORD:
+                  penalty += 3;
+                  break;
             }
         }
 
@@ -260,7 +279,8 @@ function Board(props: {
   
     let progress = (score / requiredScore) * 100;
 
-    const rotateButton = <button disabled={isRotating} onClick={() => {
+    const rotateButton = <button onClick={() => {
+      if (isRotating) return;
       setIsRotating(true);
       clearTimeout(timeoutRef.current);
       setDice(dice[0].map((val, index) => dice.map(row => row[index]).reverse()));

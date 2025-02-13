@@ -107,6 +107,20 @@
   font-size: 30px;
 }
 
+.keyLetterMedium {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.keyLetterSmall {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.sideEffect {
+  color: blue;
+}
+
 .gridRow {
   display: flex;
   height: 60px;

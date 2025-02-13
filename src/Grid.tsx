@@ -1,7 +1,7 @@
 import {PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { getSquareBonusDisplay, TDie } from './Dice';
+import { DiceBonus, getDiceBonusText, getSquareBonusDisplay, TDie } from './Dice';
 
 function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTMLDivElement)[][]) {
     for (let i = 0; i < dice.length; i++) {
@@ -41,12 +41,17 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       return <div className={'letterSpacer'}> </div>;
     }
     const die : TDie = props.die;
+    const hasSideEffect = getDiceBonusText(die.bonus || DiceBonus.B_2X).hasSideEffect;
+    let letterClass = die.letter.length < 3 ? 'keyLetter' : (die.letter.length < 4 ? 'keyLetterMedium' : 'keyLetterSmall');
+    if (hasSideEffect) {
+      letterClass += ' sideEffect';
+    }
     return (
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
           onPointerEnter={() => props.onEnter(die)}>
-            <p className={'keyLetter'}>{die.letter.toUpperCase()}</p>
+            <p className={letterClass}>{die.letter.toUpperCase()}</p>
         </div>
         {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
       </div>

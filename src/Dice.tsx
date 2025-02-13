@@ -7,6 +7,7 @@ export enum DiceBonus {
     B_ALPHABET = 'alphabet',
     B_MULTIPLIER_COUNTER = 'multiplier counter',
     B_MINUS3 = '-3',
+    B_REROLL_WORD = 'reroll word',
   }
 export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number };
 
@@ -40,18 +41,28 @@ const STARTER_DICE_FACES = [
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null}));
 
 export const ADDITIONAL_DICE: TDie[] = [
+
     {faces: ['ing', 'th', 'er', 'in', 'ed', 'tion'], bonus: null},
-    {faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X},
-    {faces: ['h', 'h', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4},
     {faces: ['s', 's', 's', 'e', 'n', 'a'], bonus: null},
-    {faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X},
-    {faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS4},
-    {faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET},
-    {faces: ['c', 'p', 'i', 'e', 's', 't'], bonus: DiceBonus.B_2_REROLL},
-    {faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1},
-    {faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_1_REROLL},
-    {faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS3},
+
+    {faces: ['ch', 'ch', 'th', 'sh', 'ck', 'ck'], bonus: DiceBonus.B_1_REROLL},
     {faces: ['a/b', 'e/f', 'h/i', 'o/k', 'u/y', 'a/y'], bonus: DiceBonus.B_1_REROLL},
+    {faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL},
+    {faces: ['p', 's', 't', 'c', 'e', 'i'], bonus: DiceBonus.B_2_REROLL},
+
+    {faces: ['h', 'h', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4},
+    {faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS4},
+    {faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS4},
+
+    {faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X},
+    {faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X},
+
+    {faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET},
+    {faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1},
+    
+    {faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS3},
+    
+    {faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD},
 ].map(d => ({letter: d.faces[0], ...d}));
 
 export function getSquareBonusDisplay(die: TDie): string {
@@ -71,12 +82,14 @@ export function getSquareBonusDisplay(die: TDie): string {
             return '(x' + die.counter + ')';
         case DiceBonus.B_MINUS3:
             return '-3';
+        case DiceBonus.B_REROLL_WORD:
+            return '-3 reroll';
         default:
             return '';
     }
 }
 
-export function getDiceBonusText(bonus: DiceBonus): {title: string, description: string} {
+export function getDiceBonusText(bonus: DiceBonus): {title: string, description: string, hasSideEffect?: boolean} {
     switch(bonus) {
         case DiceBonus.B_2X:
             return {title: '2x', description: '2x word score'};
@@ -89,11 +102,13 @@ export function getDiceBonusText(bonus: DiceBonus): {title: string, description:
         case DiceBonus.B_2_REROLL:
             return {title: '+2 rerolls', description: '+2 board reroll charges'};
         case DiceBonus.B_ALPHABET:
-            return {title: '2x and a → b', description: '2x word score and changes to the next letter in the alphabet.'};
+            return {title: '2x and a → b', description: '2x word score and changes to the next letter in the alphabet.', hasSideEffect: true};
         case DiceBonus.B_MULTIPLIER_COUNTER:
-            return {title: 'multiplier', description: 'word score multiplier increases by 1 with each word'};
+            return {title: 'multiplier', description: 'word score multiplier increases by 1 with each word', hasSideEffect: true};
         case DiceBonus.B_MINUS3:
             return {title: '-3', description: '-3 points for word'};
+        case DiceBonus.B_REROLL_WORD:
+            return {title: 'reroll word', description: 'when used in word -3 points and all dice in word rerolled', hasSideEffect: true};
         default:
             throw new Error('unknown bonus type');
     }
