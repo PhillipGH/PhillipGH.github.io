@@ -173,14 +173,6 @@
   border-radius: 10px
 }
 
-/* Fade-Out Effect */
-/* .fadeOut
-{
-visibility: hidden;
-opacity: 0;
-transition: visibility 1s 2s, opacity 2s linear;
-} */
-
 .fadeOut {
   animation: fadeOut linear 1s;
   animation-fill-mode: forwards;

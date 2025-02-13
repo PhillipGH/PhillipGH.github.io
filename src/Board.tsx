@@ -124,7 +124,7 @@ function Board(props: {
 
     let requiredScore = 18 + 18 * props.level;
     const TimeLimit = 105 + props.level * 5 + timeBonus;
-    //const TimeLimit = 20 + props.level * 5 + timeBonus;
+    // const TimeLimit = 300 + props.level * 5 + timeBonus;
     if (EASY_WIN) {
       requiredScore = 2;
     }
@@ -167,10 +167,11 @@ function Board(props: {
       if (word.length === 0) {
         return;
       }
+     if (finalWord = wordIsInDictionary(word)) {
+      word = finalWord;
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
-      } else if (finalWord = wordIsInDictionary(word)) {
-        word = finalWord;
+      } else {
         if (usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
@@ -210,6 +211,7 @@ function Board(props: {
               setDice([...dice]);
             }
         }
+      }
       } else {
         suffix = String.fromCodePoint(0x1f6ab);
       }

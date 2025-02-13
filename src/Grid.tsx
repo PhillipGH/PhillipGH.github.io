@@ -65,8 +65,8 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     if (points.length === 0) return null;
     
     if (selfRef.current !== null) {
-      const offsetX = selfRef.current.getBoundingClientRect().x;
-      const offsetY = selfRef.current.getBoundingClientRect().y;
+      const offsetX = selfRef.current.getBoundingClientRect().x -3;
+      const offsetY = selfRef.current.getBoundingClientRect().y - 3;
       points = points.map(p => ({x: p.x - offsetX, y: p.y - offsetY}));
     }
     const lines: {ax: number, ay: number, bx: number, by: number}[] = [];
@@ -75,8 +75,8 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
     return <div id="lines" ref={selfRef}>
         <div className={props.fadeOut ? "lineOrDot dot fadeOut" : 'lineOrDot dot'}  style={{
-      left: points[0].x - 25,
-      top: points[0].y - 25}}></div>
+      left: points[0].x - 20,
+      top: points[0].y - 20}}></div>
     {lines.map((line, i) => 
       <Line eq={line} fadeOut={props.fadeOut} key={i} />
       )}
@@ -99,27 +99,24 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
           by = by - ay;
       }
   
-      // console.log('ax: ' + ax);
-      // console.log('ay: ' + ay);
-      // console.log('bx: ' + bx);
-      // console.log('by: ' + by);
-  
-      var angle = Math.atan((ay - by) / (bx - ax));
+      let angle = Math.atan((ay - by) / (bx - ax));
       angle = (angle * 180 / Math.PI);
       angle = -angle;
-  
-      var length = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
-      let className = props.fadeOut ? 'lineOrDot line fadeOut' : 'lineOrDot line';
+      
+      const height = 16;
+      const length = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) + height / 2;
+      const className = props.fadeOut ? 'lineOrDot line fadeOut' : 'lineOrDot line';
+      
     return <div className={className} style={{
-      left: ax,
-      top: ay,
+      left: (bx + ax) / 2 - length / 2,
+      top: (by + ay) / 2 - height / 2,
       width: length,
-      height: 15,
+      height: height,
       transform: `rotate(${angle}deg)`,
       msTransform: `rotate(${angle}deg)`,
-      transformOrigin: '0% 0%',
+      transformOrigin: '50% 50%',
       WebkitTransform: `rotate(${angle}deg)`,
-      WebkitTransformOrigin: '0% 0%'
+      WebkitTransformOrigin: '50% 50%'
     }} />;
   } 
   
