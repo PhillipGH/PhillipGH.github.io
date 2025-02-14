@@ -80,7 +80,30 @@ function chunkArray<T>(arr: T[], columns: number) {
     die.letter = faces[Math.floor(Math.random() * faces.length)];
   }
 
+type TLastWord = {word: string, score?: number, invalidReason?: string | null};
 
+function DisplayWord(props: {
+  currentWord: TDie[],
+  lastWord: TLastWord,
+}) {
+  let word : JSX.Element | null = null;
+  let suffix : JSX.Element | null = null;
+  if (props.currentWord.length > 0) {
+    word = <p>{props.currentWord.map(d => d.letter).join('').toUpperCase()}</p>;
+  } else if (props.lastWord.word != '') {
+    if (props.lastWord.invalidReason != null) {
+      word = <p className="fadeOut invalidWord">{props.lastWord.word}</p>;
+      suffix = <p className="fadeOut">{props.lastWord.invalidReason}</p>;
+    } else {
+        word = <p className="fadeOut validWord">{props.lastWord.word}</p>;
+        suffix = <p className="fadeOut">{' (+'+ props.lastWord.score +')'}</p>;
+    }
+  }
+  return <div className="currentWord" style={{display:'flex'}}>
+      {word}
+      {suffix}
+    </div>
+}
 
 function Board(props: {
     dictionary: Set<string>,
@@ -109,7 +132,7 @@ function Board(props: {
     }, []);
     const [dice, setDice] = useState<(TDie | null)[][]>([]);
     const [currentWord, setCurrentWord] = useState<TDie[]>([]);
-    const [lastWord, setLastWord] = useState('');
+    const [lastWord, setLastWord] = useState<TLastWord>({word: ''});
     const [score, setScore] = useState<number>(0);
     const [isRotating, setIsRotating] = useState(false);
     const timeoutRef = useRef(0);
@@ -160,14 +183,16 @@ function Board(props: {
     }
   
   
-    function commitWord() {
-      let suffix = '';
-      let word = currentWord.map(d => d.letter).join('');
-      let finalWord : string | null = null;
-      if (word.length === 0) {
-        return;
-      }
-     if (finalWord = wordIsInDictionary(word)) {
+  function commitWord() {
+    // return;
+    let suffix: string | null = null;
+    let scoreChange = 0;
+    let word = currentWord.map(d => d.letter).join('');
+    let finalWord: string | null = null;
+    if (word.length === 0) {
+      return;
+    }
+    if (finalWord = wordIsInDictionary(word)) {
       word = finalWord;
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
@@ -175,50 +200,49 @@ function Board(props: {
         if (usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
-            setUsedWords(new Set(usedWords.add(word)));
-            let scoreChange = scoreWord(word, currentWord);
-            suffix = ' +' + scoreChange;
-            setScore(score + scoreChange);
+          setUsedWords(new Set(usedWords.add(word)));
+          scoreChange = scoreWord(word, currentWord);
+          setScore(score + scoreChange);
 
-            props.stats.totalWords++;
-            if (word.length > props.stats.longestWord.length)
-              props.stats.longestWord = word;
-            if (scoreChange > props.stats.highestWordScore) {
-              props.stats.highestWordScore = scoreChange;
-              props.stats.highestWordScoreWord = word;
-            }
-            props.setStats(props.stats);
+          props.stats.totalWords++;
+          if (word.length > props.stats.longestWord.length)
+            props.stats.longestWord = word;
+          if (scoreChange > props.stats.highestWordScore) {
+            props.stats.highestWordScore = scoreChange;
+            props.stats.highestWordScoreWord = word;
+          }
+          props.setStats(props.stats);
 
-            let rerollWord = false;
-            for (let i = 0; i < currentWord.length; i++) {
-                let die = currentWord[i];
-                switch (die.bonus) {
-                    case DiceBonus.B_ALPHABET:
-                        die.letter = nextAlphabetLetter(die.letter);
-                        setDice([...dice]);
-                        break;
-                    case DiceBonus.B_MULTIPLIER_COUNTER:
-                        die.counter = (die.counter || 1) + 1;
-                        setDice([...dice]);
-                        break;
-                    case DiceBonus.B_REROLL_WORD:
-                      rerollWord = true;
-                      break;
-                }
+          let rerollWord = false;
+          for (let i = 0; i < currentWord.length; i++) {
+            let die = currentWord[i];
+            switch (die.bonus) {
+              case DiceBonus.B_ALPHABET:
+                die.letter = nextAlphabetLetter(die.letter);
+                setDice([...dice]);
+                break;
+              case DiceBonus.B_MULTIPLIER_COUNTER:
+                die.counter = (die.counter || 1) + 1;
+                setDice([...dice]);
+                break;
+              case DiceBonus.B_REROLL_WORD:
+                rerollWord = true;
+                break;
             }
-            if (rerollWord) {
-              currentWord.map(die => rerollDie(die));
-              setDice([...dice]);
-            }
+          }
+          if (rerollWord) {
+            currentWord.map(die => rerollDie(die));
+            setDice([...dice]);
+          }
         }
       }
-      } else {
-        suffix = String.fromCodePoint(0x1f6ab);
-      }
-      let last = word.toUpperCase() + suffix;
-      setLastWord(last);
-      setCurrentWord([]);
+    } else {
+      suffix = String.fromCodePoint(0x1f6ab);
     }
+    let last = word.toUpperCase();
+    setLastWord({ word: last, score: scoreChange, invalidReason: suffix });
+    setCurrentWord([]);
+  }
 
     function handleStart() {
       setStartTime(Date.now());
@@ -294,11 +318,7 @@ function Board(props: {
         const baseScore = word.length - 3 + fib(word.length-2) * 3 ;
         return Math.round((baseScore + bonus) * multiplier - penalty);
     }
-  
-    let displayWord = currentWord.length > 0 ?
-      <p>{currentWord.map(d => d.letter).join('').toUpperCase()}</p> :
-      <p className="fadeOut">{lastWord}</p>;
-    
+
     let secondsPassed = Math.round((now - startTime) / 1000);
     let secondsLeft = TimeLimit - secondsPassed;
     let minutes = Math.floor(secondsLeft / 60);
@@ -336,9 +356,7 @@ function Board(props: {
         <div style={{width: progress + '%'}}></div>
         <center><label>{score} / {requiredScore}</label></center>
       </div>
-      <div className="currentWord">
-        {displayWord}
-      </div>
+      <DisplayWord lastWord={lastWord} currentWord={currentWord}/>
       <div className='container'>
         <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} />
       </div>
