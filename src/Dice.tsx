@@ -16,6 +16,7 @@ export enum DieDescription {
     MINUS_ONE_LETTER,
     ASTERIX,
     REROLL_CHARGE,
+    HEARTS,
 }
 export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, desc?: DieDescription };
 
@@ -66,6 +67,7 @@ export const ADDITIONAL_DICE: TDie[] = [
 
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
+    { faces: ['m', 'a', 'd', 'd', 'y', 'f'], bonus: DiceBonus.B_2X, desc: DieDescription.HEARTS},
 
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
@@ -139,6 +141,8 @@ export function getDieDesc(die: TDie): JSX.Element | null {
             return <p>A <b>-1</b> removes one letter from any part of your word</p>;
         case DieDescription.REROLL_CHARGE:
             return <p><b>Reroll Charges</b> can be used at any time to reroll the board and give {REROLL_TIME_BONUS} more seconds</p>;
+        case DieDescription.HEARTS:
+            return <p>❤️</p>
         default:
             return null;
     }
