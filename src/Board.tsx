@@ -80,6 +80,22 @@ function chunkArray<T>(arr: T[], columns: number) {
     die.letter = faces[Math.floor(Math.random() * faces.length)];
   }
 
+  function tokenizeWord(word: string): string[] {
+    const tokens : string[] = [];
+    for (let i = 0; i < word.length; i++) {
+      let token = word[i];
+      if (token === '-') {
+        token = word.slice(i, i + 2);
+        i++;
+      } else if (i < word.length - 1 && word[i+1] === '/') {
+        token = word.slice(i, i + 3);
+        i+=2;
+      }
+      tokens.push(token);
+    }
+    return tokens;
+  }
+
 type TLastWord = {word: string, score?: number, invalidReason?: string | null};
 
 function DisplayWord(props: {
@@ -152,35 +168,56 @@ function Board(props: {
       requiredScore = 2;
     }
 
-    function wordIsInDictionary(word: string, ref = {isUsed: false}): string | null {
-        if (props.dictionary.has(word)) {
-            return word;
-        }
-        const index = word.search(/\/|\*/);         
-        let usedWord : string | null = null;
-        if (index > -1) { 
-            let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-            let regex = /\*/;
-            if (word[index] === '/') {
-                alphabet = [word[index - 1], word[index + 1]];
-                regex = /[a-z]\/[a-z]/;
+  function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
+    console.log(word);
+    if (props.dictionary.has(word)) {
+      return word;
+    }
+    const index = word.search(/\/|\*|-1/);
+    let usedWord: string | null = null;
+    if (index > -1) {
+      let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      let regex = /\*/;
+      if (word[index] === '/') {
+        alphabet = [word[index - 1], word[index + 1]];
+        regex = /[a-z]\/[a-z]/;
+      } else if (word[index] === '-') {
+        word = word.replace('-1', '');
+        const tokens = tokenizeWord(word);
+        for (let i = 0; i < tokens.length; i++) {
+          const ref2 = { isUsed: false };
+          const slicedTokens = tokens.slice();
+          slicedTokens.splice(i,1);
+          const slicedWord = slicedTokens.join('');
+          let result = wordIsInDictionary(slicedWord, ref2);
+          if (result) {
+            if (ref2.isUsed || usedWords.has(result)) {
+              ref.isUsed = true;
+              usedWord = result;
+            } else {
+              ref.isUsed = false;
+              return result;
             }
-            for (let i = 0; i < alphabet.length; i++) {
-                const ref2  = {isUsed: false};
-                let result = wordIsInDictionary(word.replace(regex, alphabet[i]), ref2);
-                if (result) {
-                    if (ref2.isUsed || usedWords.has(result)) {
-                        ref.isUsed = true;
-                        usedWord = result;
-                    } else {
-                        ref.isUsed = false;
-                        return result;
-                    }
-                }
-            }
+          }
         }
         return usedWord;
+      }
+      for (let i = 0; i < alphabet.length; i++) {
+        const ref2 = { isUsed: false };
+        let result = wordIsInDictionary(word.replace(regex, alphabet[i]), ref2);
+        if (result) {
+          if (ref2.isUsed || usedWords.has(result)) {
+            ref.isUsed = true;
+            usedWord = result;
+          } else {
+            ref.isUsed = false;
+            return result;
+          }
+        }
+      }
     }
+    return usedWord;
+  }
   
   
   function commitWord() {

@@ -1,14 +1,19 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { getDiceBonusText, TDie } from './Dice';
+import { getDiceBonusText, getDieDesc, TDie, DieDescription } from './Dice';
 
 export function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);
     let bonus: React.JSX.Element | null = null;
+    let description: React.JSX.Element | null = getDieDesc(props.die);
     if (props.die.bonus) {
         const text = getDiceBonusText(props.die.bonus);
         bonus = <div className="bonus"><h3>{text.title}</h3><p>{text.description}</p></div>;
+    }
+    
+    if (description != null) {
+        description = <i className='bonus'>{description}</i>
     }
     if (props.chosen && selfRef.current !== null) {
         const offsetY = selfRef.current.getBoundingClientRect().y;
@@ -23,6 +28,7 @@ export function Die(props: { die: TDie, chosen?: boolean}) {
         </div>
         {props.chosen && <div style={{width:333.6, height: 55.6}}></div>}
         {bonus}
+        {description}
     </div>
 }
 
