@@ -79,7 +79,7 @@ export const ADDITIONAL_DICE: TDie[] = [
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
-STARTER_DICE.push(...ADDITIONAL_DICE);
+// STARTER_DICE.push(...ADDITIONAL_DICE);
 
 export function getSquareBonusDisplay(die: TDie): string {
     switch (die.bonus) {

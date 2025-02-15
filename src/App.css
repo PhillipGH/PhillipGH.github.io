@@ -155,7 +155,17 @@
 }
 
 .timer {
-  margin: 2px;
+  margin: 5px;
+  font-size: 3em;
+}
+
+.buttons {
+  float: right
+}
+
+.buttons > button {
+  padding:0.6em 0.5em;
+  margin-left: 5px;
 }
 
 #lines {

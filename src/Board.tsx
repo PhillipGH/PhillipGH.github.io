@@ -98,6 +98,51 @@ function chunkArray<T>(arr: T[], columns: number) {
     return tokens;
   }
 
+  function scoreWord(word: string, dice: TDie[]) {
+    let multiplier = 1;
+    let bonus = 0;
+    let penalty = 0;
+    if (dice[0].bonus === DiceBonus.B_PLUS4) {
+        bonus += 4;
+    }
+    for (let i = 0; i < dice.length; i++) {
+        switch (dice[i].bonus) {
+            case DiceBonus.B_2X:
+                multiplier *= 2;
+                break;
+            case DiceBonus.B_15X:
+                multiplier *= 1.5;
+                break;
+            case DiceBonus.B_ALPHABET:
+                multiplier *= 1.5;
+                break;
+            case DiceBonus.B_MULTIPLIER_COUNTER:
+                multiplier *= (dice[i].counter || 1);
+                break;
+            case DiceBonus.B_MINUS3:
+                penalty += 3;
+                break;
+            case DiceBonus.B_REROLL_WORD:
+              penalty += 3;
+              break;
+        }
+    }
+
+    const tokens = tokenizeWord(word);
+    let length = tokens.length;
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] == '-1') {
+        length -= 2;
+      }
+    }
+    if (length < 3) {
+      return null;
+    }
+    const baseScore = length - 3 + fib(length-2) * 3;
+    // return Math.round((baseScore + bonus) * multiplier - penalty);
+    return {baseScore, bonus, multiplier, penalty};
+}
+
 type TLastWord = {word: string, score?: number, invalidReason?: string | null};
 
 function DisplayWord(props: {
@@ -107,14 +152,36 @@ function DisplayWord(props: {
   let word : JSX.Element | null = null;
   let suffix : JSX.Element | null = null;
   if (props.currentWord.length > 0) {
-    word = <p>{props.currentWord.map(d => d.letter).join('').toUpperCase()}</p>;
+    const w = props.currentWord.map(d => d.letter).join('');
+    //Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty)
+    const s = scoreWord(w, props.currentWord);
+    if (s) {
+      let scoreCalc = s.baseScore + '';
+      if (s.bonus > 0) {
+        scoreCalc = scoreCalc + ' + ' + s.bonus;
+      }
+      if (s.multiplier != 1) {
+        if (s.bonus === 0) {
+          scoreCalc = scoreCalc + ' x ' + s.multiplier;
+        } else {
+          scoreCalc = '[' + scoreCalc + '] x ' + s.multiplier;
+        }
+        
+      }
+      if (s.penalty != 0) {
+        scoreCalc = scoreCalc + ' - ' + s.penalty;
+      }
+      word = <p>{w.toUpperCase()}<sub>{'(' + scoreCalc + ')'}</sub></p>;
+    } else {
+      word = <p>{w.toUpperCase()}</p>;
+    }
   } else if (props.lastWord.word != '') {
     if (props.lastWord.invalidReason != null) {
       word = <p className="fadeOut invalidWord">{props.lastWord.word}</p>;
       suffix = <p className="fadeOut">{props.lastWord.invalidReason}</p>;
     } else {
         word = <p className="fadeOut validWord">{props.lastWord.word}</p>;
-        suffix = <p className="fadeOut">{' (+'+ props.lastWord.score +')'}</p>;
+        suffix = <p className="fadeOut"><sub>{'('+ props.lastWord.score +')'}</sub></p>;
     }
   }
   return <div className="currentWord" style={{display:'flex'}}>
@@ -294,7 +361,9 @@ function Board(props: {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
           setUsedWords(new Set(usedWords.add(word)));
-          scoreChange = scoreWord(word, currentWord);
+          const s = scoreWord(word, currentWord);
+          if (s)
+            scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
           setScore(score + scoreChange);
 
           props.stats.totalWords++;
@@ -356,40 +425,6 @@ function Board(props: {
         }}>Continue</button>
       </div>;
     }
-  
-    function scoreWord(word: string, dice: TDie[]) {
-        let multiplier = 1;
-        let bonus = 0;
-        let penalty = 0;
-        if (dice[0].bonus === DiceBonus.B_PLUS4) {
-            bonus += 4;
-        }
-        for (let i = 0; i < dice.length; i++) {
-            switch (dice[i].bonus) {
-                case DiceBonus.B_2X:
-                    multiplier *= 2;
-                    break;
-                case DiceBonus.B_15X:
-                    multiplier *= 1.5;
-                    break;
-                case DiceBonus.B_ALPHABET:
-                    multiplier *= 1.5;
-                    break;
-                case DiceBonus.B_MULTIPLIER_COUNTER:
-                    multiplier *= (dice[i].counter || 1);
-                    break;
-                case DiceBonus.B_MINUS3:
-                    penalty += 3;
-                    break;
-                case DiceBonus.B_REROLL_WORD:
-                  penalty += 3;
-                  break;
-            }
-        }
-
-        const baseScore = word.length - 3 + fib(word.length-2) * 3 ;
-        return Math.round((baseScore + bonus) * multiplier - penalty);
-    }
 
     let secondsPassed = Math.round((now - startTime) / 1000);
     let secondsLeft = TimeLimit - secondsPassed;
@@ -421,7 +456,7 @@ function Board(props: {
       }}>Reroll +30s ({props.rerollCounter})</button>;
     }
     return <div>
-      <div style={{float: 'right'}}>{rerollButton}{rotateButton}</div>
+      <div className="buttons">{rerollButton}{rotateButton}</div>
             
       <h1 className="timer" style={{color:'hsl('+ timerHue +', ' + timerSaturation + '%, 50%)'}}>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
       <div id="progressbar">
