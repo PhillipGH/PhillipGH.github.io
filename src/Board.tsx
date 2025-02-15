@@ -6,20 +6,22 @@ import GameStatsView, { TGameStats } from "./GameStats";
 
 const EASY_WIN = false;
 
-/*
-for (let i = 3; i <= 10; i++) {
-  console.log(i, fib(i - 2), i - 3 + fib(i-2)*3);
-}
-  */
-
-
 function fib(n: number): number {
   if (n === 0) return 0;
   if (n === 1) return 1;
   return fib(n - 1) + fib(n - 2);
 }
 
-
+const ROTATION_COORDS: [number, number][] = [
+  [-1,-1],
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+  [1, 0],
+  [1, -1],
+  [0, -1],
+];
 
 function chunkArray<T>(arr: T[], columns: number) {
   const result = arr.reduce<(T | null)[][]>((resultArray, item, index) => {
@@ -169,7 +171,6 @@ function Board(props: {
     }
 
   function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
-    console.log(word);
     if (props.dictionary.has(word)) {
       return word;
     }
@@ -218,10 +219,65 @@ function Board(props: {
     }
     return usedWord;
   }
-  
+
+  function getDiceCoord(die: TDie) : [number, number] {
+    for (let i = 0; i < dice.length; i++) {
+      for (let j = 0; j < dice[i].length; j++) {
+        if (dice[i][j] === die) {
+          return [i,j];
+        }
+      }
+    }
+    return [-1,-1];
+  }
+
+  function mutateBoard() {
+    let rerollWord = false;
+    const rotationDice: TDie[] = [];
+    for (let i = 0; i < currentWord.length; i++) {
+      let die = currentWord[i];
+      switch (die.bonus) {
+        case DiceBonus.B_ALPHABET:
+          die.letter = nextAlphabetLetter(die.letter);
+          setDice([...dice]);
+          break;
+        case DiceBonus.B_MULTIPLIER_COUNTER:
+          die.counter = (die.counter || 1) + 1;
+          setDice([...dice]);
+          break;
+        case DiceBonus.B_REROLL_WORD:
+          rerollWord = true;
+          break;
+        case DiceBonus.B_ROTATE:
+          rotationDice.push(die);
+      }
+    }
+    if (rerollWord) {
+      currentWord.map(die => rerollDie(die));
+      setDice([...dice]);
+    }
+    if (!rotationDice) {
+      return;
+    }
+    for (let index = 0; index < rotationDice.length; index++) {
+      const centerDie = rotationDice[index];
+      const [i, j] = getDiceCoord(centerDie);
+      const coords = ROTATION_COORDS.map(p => [i + p[0], j + p[1]]).filter(p => {
+        return p[0] >= 0 && p[0] < dice.length && p[1] >= 0 && p[1] < dice[0].length && dice[p[0]][p[1]] != null;
+      });
+      // rotate the dice
+      let tmp = dice[coords[coords.length - 1][0]][coords[coords.length - 1][1]];
+      for (let k = 0; k < coords.length; k++) {
+        let p = coords[k];
+        let tmp2 = dice[p[0]][p[1]];
+        dice[p[0]][p[1]] = tmp;
+        tmp = tmp2;
+      }
+    }
+    setDice([...dice]);
+  }
   
   function commitWord() {
-    // return;
     let suffix: string | null = null;
     let scoreChange = 0;
     let word = currentWord.map(d => d.letter).join('');
@@ -249,28 +305,7 @@ function Board(props: {
             props.stats.highestWordScoreWord = word;
           }
           props.setStats(props.stats);
-
-          let rerollWord = false;
-          for (let i = 0; i < currentWord.length; i++) {
-            let die = currentWord[i];
-            switch (die.bonus) {
-              case DiceBonus.B_ALPHABET:
-                die.letter = nextAlphabetLetter(die.letter);
-                setDice([...dice]);
-                break;
-              case DiceBonus.B_MULTIPLIER_COUNTER:
-                die.counter = (die.counter || 1) + 1;
-                setDice([...dice]);
-                break;
-              case DiceBonus.B_REROLL_WORD:
-                rerollWord = true;
-                break;
-            }
-          }
-          if (rerollWord) {
-            currentWord.map(die => rerollDie(die));
-            setDice([...dice]);
-          }
+          mutateBoard();
         }
       }
     } else {
