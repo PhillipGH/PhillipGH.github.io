@@ -23,6 +23,8 @@ export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, c
 
 export const REROLL_TIME_BONUS = 30;
 
+export const DEL = '🔙'; // also update the regex in Board.tsx!
+
 const STARTER_DICE_FACES = [
     //'ennnda',
     'titiei',
@@ -72,7 +74,7 @@ export const ADDITIONAL_DICE: TDie[] = [
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
     { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS3, desc: DieDescription.ASTERIX },
-    { faces: ['-1', '-1', '-1', '-1', '-1', '-1'], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
+    { faces: [DEL, DEL, DEL, DEL, DEL, DEL], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
 
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
@@ -144,7 +146,7 @@ export function getDieDesc(die: TDie): JSX.Element | null {
         case DieDescription.ASTERIX:
             return <p>A <b>*</b> is a wildcard that can be used as any one letter</p>;
         case DieDescription.MINUS_ONE_LETTER:
-            return <p>A <b>-1</b> removes one letter from any part of your word</p>;
+            return <p>A <b>{DEL}</b> removes one letter from any part of your word</p>;
         case DieDescription.REROLL_CHARGE:
             return <p><b>Reroll Charges</b> can be used at any time to reroll the board and give {REROLL_TIME_BONUS} more seconds</p>;
         case DieDescription.HEARTS:

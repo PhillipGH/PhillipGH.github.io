@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
+import { DEL, DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
 import GameStatsView, { TGameStats } from "./GameStats";
@@ -86,9 +86,9 @@ function chunkArray<T>(arr: T[], columns: number) {
     const tokens : string[] = [];
     for (let i = 0; i < word.length; i++) {
       let token = word[i];
-      if (token === '-') {
-        token = word.slice(i, i + 2);
-        i++;
+      if (token === DEL[0]) {
+        token = word.slice(i, i + DEL.length);
+        i += DEL.length - 1;
       } else if (i < word.length - 1 && word[i+1] === '/') {
         token = word.slice(i, i + 3);
         i+=2;
@@ -131,7 +131,7 @@ function chunkArray<T>(arr: T[], columns: number) {
     const tokens = tokenizeWord(word);
     let length = tokens.length;
     for (let i = 0; i < tokens.length; i++) {
-      if (tokens[i] == '-1') {
+      if (tokens[i] == DEL) {
         length -= 2;
       }
     }
@@ -152,9 +152,21 @@ function DisplayWord(props: {
   let word : JSX.Element | null = null;
   let suffix : JSX.Element | null = null;
   if (props.currentWord.length > 0) {
-    const w = props.currentWord.map(d => d.letter).join('');
-    //Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty)
+    let w = props.currentWord.map(d => d.letter).join('');
+    const tokens = tokenizeWord(w);
     const s = scoreWord(w, props.currentWord);
+    w = '';
+    let delCounter = 0;
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] === DEL) {
+        delCounter++;
+      } else {
+        w += tokens[i];
+      }
+    }
+    for (let i = 0; i < delCounter; i++) {
+      w += DEL;
+    }
     if (s) {
       let scoreCalc = s.baseScore + '';
       if (s.bonus > 0) {
@@ -241,7 +253,7 @@ function Board(props: {
     if (props.dictionary.has(word)) {
       return word;
     }
-    const index = word.search(/\/|\*|-1/);
+    const index = word.search(/\/|\*|🔙/);
     let usedWord: string | null = null;
     if (index > -1) {
       let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -249,10 +261,11 @@ function Board(props: {
       if (word[index] === '/') {
         alphabet = [word[index - 1], word[index + 1]];
         regex = /[a-z]\/[a-z]/;
-      } else if (word[index] === '-') {
-        word = word.replace('-1', '');
+      } else if (word[index] === DEL[0]) {
+        word = word.replace(DEL, '');
         const tokens = tokenizeWord(word);
         for (let i = 0; i < tokens.length; i++) {
+          // maybe we should make it so deletes can't delete other deletes?
           const ref2 = { isUsed: false };
           const slicedTokens = tokens.slice();
           slicedTokens.splice(i,1);
