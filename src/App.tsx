@@ -3,7 +3,7 @@ import './App.css'
 import React from 'react';
 import dictionaryRaw from './assets/dictionary1.txt?raw'
 import RewardsPhase, { DiceView } from './RewardsPhase';
-import { ADDITIONAL_DICE, DiceBonus, nextAlphabetLetter, STARTER_DICE, TDie } from './Dice';
+import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import GameStatsView, { TGameStats } from './GameStats';
 

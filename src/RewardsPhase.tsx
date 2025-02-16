@@ -1,7 +1,6 @@
-import { PointerEvent, useEffect, useRef, useState } from 'react'
+import {useRef, useState } from 'react'
 import './App.css'
-import React from 'react';
-import { getDiceBonusText, getDieDesc, TDie, DieDescription } from './Dice';
+import { getDiceBonusText, getDieDesc, TDie } from './Dice';
 
 export function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);

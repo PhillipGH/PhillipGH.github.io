@@ -1,4 +1,3 @@
-import React from "react";
 import { TDie } from "./Dice";
 import { Die } from "./RewardsPhase";
 

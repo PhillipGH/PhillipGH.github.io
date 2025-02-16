@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DEL, DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
-import GameStatsView, { TGameStats } from "./GameStats";
+import { TGameStats } from "./GameStats";
 
 const EASY_WIN = false;
 
@@ -401,8 +401,6 @@ function Board(props: {
     function handleStart() {
       setStartTime(Date.now());
       setNow(Date.now());
-      const start = Date.now();
-  
       clearInterval(intervalRef.current);
       intervalRef.current = setInterval(() => {
         setNow(Date.now());
@@ -455,7 +453,7 @@ function Board(props: {
       if (isRotating) return;
       setIsRotating(true);
       clearTimeout(timeoutRef.current);
-      setDice(dice[0].map((val, index) => dice.map(row => row[index]).reverse()));
+      setDice(dice[0].map((_val, index) => dice.map(row => row[index]).reverse()));
       timeoutRef.current = setTimeout(() => {
         setIsRotating(false);
       }, 250);
