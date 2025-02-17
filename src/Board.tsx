@@ -4,7 +4,7 @@ import Grid from "./Grid";
 import React from 'react';
 import { TGameStats } from "./GameStats";
 
-const EASY_WIN = false;
+const OVERRIDE_SCORE = 8;
 
 function fib(n: number): number {
   if (n === 0) return 0;
@@ -245,8 +245,8 @@ function Board(props: {
     let requiredScore = 18 + 18 * props.level;
     const TimeLimit = 105 + props.level * 5 + timeBonus;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
-    if (EASY_WIN) {
-      requiredScore = 2;
+    if (OVERRIDE_SCORE) {
+      requiredScore = OVERRIDE_SCORE;
     }
 
   function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
@@ -265,7 +265,7 @@ function Board(props: {
         word = word.replace(DEL, '');
         const tokens = tokenizeWord(word);
         for (let i = 0; i < tokens.length; i++) {
-          // maybe we should make it so deletes can't delete other deletes?
+          // TODO maybe we should make it so deletes can't delete other deletes?
           const ref2 = { isUsed: false };
           const slicedTokens = tokens.slice();
           slicedTokens.splice(i,1);
@@ -378,6 +378,9 @@ function Board(props: {
           if (s)
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
           setScore(score + scoreChange);
+          if (score + scoreChange >= requiredScore) {
+            clearInterval(intervalRef.current);
+          }
 
           props.stats.totalWords++;
           if (word.length > props.stats.longestWord.length)
@@ -427,13 +430,15 @@ function Board(props: {
       }
     }, [now, startTime, timeBonus, score]);
   
+    let overlay : null | JSX.Element = null;
     if (score >= requiredScore) {
-      clearInterval(intervalRef.current);
-      return <div className="game">
-        <h1>Level {props.level} Complete!</h1>
-        <button onClick={() => {
-          props.onWin();
-        }}>Continue</button>
+      overlay = <div id="winOverlay">
+        <div>
+          <h2>Level {props.level} Complete!</h2>
+          <button onClick={() => {
+            props.onWin();
+          }}>Continue</button>
+        </div>
       </div>;
     }
 
@@ -447,7 +452,7 @@ function Board(props: {
     const timerSaturationProgress = 1 - Math.min(secondsLeft, 45) / 45.0;
     const timerSaturation = timerSaturationProgress * 70.0 + 30.0;
   
-    let progress = (score / requiredScore) * 100;
+    let progress = Math.min((score / requiredScore) * 100, 100);
 
     const rotateButton = <button onClick={() => {
       if (isRotating) return;
@@ -478,6 +483,7 @@ function Board(props: {
       <div className='container'>
         <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} />
       </div>
+      {overlay}
     </div>;
   }
 
