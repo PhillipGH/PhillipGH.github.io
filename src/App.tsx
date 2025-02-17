@@ -55,7 +55,7 @@ function Game(props: {dictionary: Set<string>}) {
       }, []);
 
 
-  function onWin() { 
+  function onWin() {
     setLevel(level + 1);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
@@ -96,7 +96,7 @@ function Game(props: {dictionary: Set<string>}) {
       dictionary={props.dictionary}
       level={level} onLose={onLose}
       onWin={onWin}
-      inputDice={dice}
+      inputDice={dice.map((d, index) => {return {...d, id: index};})}
       rerollCounter={rerollCounter}
       setRerollCounter={setRerollCounter}
       stats={stats}

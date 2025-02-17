@@ -1,3 +1,5 @@
+import React from "react";
+
 export enum DiceBonus {
     B_15X = '1.5x',
     B_2X = '2x',
@@ -17,7 +19,7 @@ export enum DieDescription {
     REROLL_CHARGE,
     HEARTS,
 }
-export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, desc?: DieDescription };
+export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, desc?: DieDescription,  id?: number};
 
 export const REROLL_TIME_BONUS = 30;
 

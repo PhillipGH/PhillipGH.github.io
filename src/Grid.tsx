@@ -3,6 +3,8 @@ import './App.css'
 import React from 'react';
 import { DiceBonus, getDiceBonusText, getSquareBonusDisplay, TDie } from './Dice';
 
+const SPACING = 60;
+
 function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTMLDivElement)[][]) {
     for (let i = 0; i < dice.length; i++) {
       for (let j = 0; j < dice[i].length; j++) {
@@ -32,10 +34,13 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   }
   
   function Square(props: {
+    i: number,
+    j: number,
     die: TDie | null,
     isRotating: boolean,
     onEnter: (d: TDie) => void,
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
+    getSquares: () => (null|HTMLDivElement)[][]
   }) {
     if (props.die == null) {
       return <div className={'letterSpacer'}> </div>;
@@ -47,6 +52,13 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       letterClass += ' sideEffect';
     }
     return (
+      <div
+      ref={(node) => {
+        const list = props.getSquares();
+        list[props.j][props.i] = node;
+      }}
+      style={{left: props.i * SPACING, top: props.j * SPACING}}
+      className='letterDivContainer'>
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
@@ -54,7 +66,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
             <p className={letterClass}>{die.letter.toUpperCase()}</p>
         </div>
         {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
-      </div>
+      </div></div>
     );
   }
   
@@ -186,26 +198,32 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
           }
           return points;
       }
-  
-    return <div className={props.isRotating ? "grid groatate" :"grid"} onPointerUp={() => setIsMouseDown(false)}>
-      {props.dice.map(
-        (row: (TDie | null)[], j) =>
-          <div className="gridRow" key={j}>
-            {row.map(
-              (key, i) =>
-                <div ref={(node) => {
-                  const list = getSquares();
-                  list[j][i] = node;
-                }} key={i}>
+      let sortedDice: {d:TDie | null, i:number, j:number}[] = [];
+      for (let a = 0; a < props.dice.length; a++) {
+        for (let b = 0; b < (props.dice[0] ?  props.dice[0].length : 0); b++) {
+          sortedDice.push({d: props.dice[a][b], i: b, j: a});
+        }
+      }
+      sortedDice.sort((a,b) => (a.d?.id != null ? a.d?.id : -1) - (b.d?.id!= null ?  b.d?.id : -1));
+
+    return <div
+      className={props.isRotating ? "grid groatate" :"grid"}
+      style={{width: SPACING * props.dice.length, height: props.dice[0] ? SPACING * props.dice[0].length: 0}}
+      onPointerUp={() => setIsMouseDown(false)}
+    >
+      {sortedDice.map(
+              (d) =>
                 <Square
-                  die={key}
+                  i={d.i}
+                  j={d.j}
+                  die={d.d}
+                  key={d.d?.id != null ? d.d?.id : -1}
                   isRotating={props.isRotating}
                   onClick={onClick}
                   onEnter={onEnter}
+                  getSquares={getSquares}
                 />
-                </div>
             )}
-          </div>)}
       <Lines points={points} fadeOut={props.currentWord.length === 0}/>
     </div>;
   }

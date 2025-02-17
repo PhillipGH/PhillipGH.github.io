@@ -47,9 +47,17 @@
   align-items: center;
 }
 
+.letterDivContainer {
+  position: absolute;
+  left: 0;
+  transition: left 1s linear, top 1s linear;
+  top: 0;
+}
+
 .grid {
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .groatate {
