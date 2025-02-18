@@ -481,7 +481,7 @@ function Board(props: {
       </div>
       <DisplayWord lastWord={lastWord} currentWord={currentWord}/>
       <div className='container'>
-        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={false} />
+        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} />
       </div>
       {overlay}
     </div>;

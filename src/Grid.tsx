@@ -1,4 +1,4 @@
-import {PointerEvent, useEffect, useRef, useState } from 'react'
+import {PointerEvent, useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
 import { DiceBonus, getDiceBonusText, getSquareBonusDisplay, TDie } from './Dice';
@@ -58,7 +58,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
         list[props.j][props.i] = node;
       }}
       style={{left: props.i * SPACING, top: props.j * SPACING}}
-      className='letterDivContainer'>
+      className={props.isRotating ? 'letterDivContainer' : 'letterDivContainer transit'}>
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
@@ -71,16 +71,16 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   }
   
   function Lines(props: {points: {x: number, y: number}[], fadeOut: boolean}) {
-    const selfRef = useRef<null|HTMLDivElement>(null);
+    const [offset, setOffset] = useState<[number, number]>([0,0]);
+    const selfRef = useCallback((node) => {
+      if (!node) return;
+      const offsetX = node.getBoundingClientRect().x -3;
+      const offsetY = node.getBoundingClientRect().y - 3;
+      setOffset([offsetX,offsetY]);
+    }, []);
     let points = props.points;
-
     if (points.length === 0) return null;
-    
-    if (selfRef.current !== null) {
-      const offsetX = selfRef.current.getBoundingClientRect().x -3;
-      const offsetY = selfRef.current.getBoundingClientRect().y - 3;
-      points = points.map(p => ({x: p.x - offsetX, y: p.y - offsetY}));
-    }
+    points = points.map(p => ({x: p.x - offset[0], y: p.y - offset[1]}));
     const lines: {ax: number, ay: number, bx: number, by: number}[] = [];
     for (var i = 1; i < points.length; i++) {
        lines.push({ax: points[i - 1].x, ay: points[i - 1].y, bx: points[i].x, by: points[i].y});
@@ -153,6 +153,11 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
         window.removeEventListener('pointerup', onMouseUp);
       }
     }, [props.currentWord]);
+
+    useEffect(() => {
+      setPoints([]);
+    }, [props.isRotating]);
+
   
     function getSquares() {
       if (!squaresRef.current) {
@@ -224,7 +229,9 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   getSquares={getSquares}
                 />
             )}
-      <Lines points={points} fadeOut={props.currentWord.length === 0}/>
+      <div style={{display : props.isRotating ? "none" : ""}}>
+        <Lines points={points} fadeOut={props.currentWord.length === 0}/>
+      </div>
     </div>;
   }
 

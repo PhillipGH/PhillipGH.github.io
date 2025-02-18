@@ -49,8 +49,12 @@
 
 .letterDivContainer {
   position: absolute;
+}
+
+.transit {
+  position: absolute;
   left: 0;
-  transition: left 1s linear, top 1s linear;
+  transition: left .5s linear, top .5s linear;
   top: 0;
 }
 
@@ -58,14 +62,19 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  transition: width 0.2s linear, height 0.2s linear;
 }
 
 .groatate {
   animation: rotateBoard 0.25s;
 }
 
+.groatateRev {
+  /* animation: rotateLines 025s; */
+  transform: rotate(90deg);
+}
 .letterRot {
-  animation: rotateLetter 0.25s;
+  animation: rotateLetter 0.25s; 
 }
 
 @keyframes rotateBoard {
@@ -74,6 +83,14 @@
   }
   100% {
     transform: rotate(0deg);
+  }
+}
+@keyframes rotateLines {
+  0% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(90);
   }
 }
 
