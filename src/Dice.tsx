@@ -51,6 +51,8 @@ const STARTER_DICE_FACES = [
     'touoot',
     //'isfraa',
     'nrlhdo',
+
+    'nrlhdo',
 ];
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null }));
 

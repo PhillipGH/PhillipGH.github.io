@@ -30,6 +30,23 @@
   border: 1px solid blue;
   margin: 2px;
   position: relative;
+  transform: translate3d(0px, 0, 28px);
+}
+
+.nextLetter {
+  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid blue;
+  margin: 2px;
+  position: relative;
+  top: 0;
+  position: absolute;
+  pointer-events: none;
+  transform: translate3d(-28px, 0, 0px) rotate3D(0,1,0,-90deg);
 }
 
 .letterSpacer {
@@ -49,6 +66,20 @@
 
 .letterDivContainer {
   position: absolute;
+}
+
+.rolling {
+  transform-style: preserve-3d;
+  animation: letterTransition 0.2s linear;
+}
+
+@keyframes letterTransition {
+  0% {
+    transform: rotate3D(0,1,0,0deg);
+  }
+  100% {
+    transform: rotate3D(0,1,0,90deg);
+  }
 }
 
 .transit {

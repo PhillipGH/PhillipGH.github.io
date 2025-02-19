@@ -1,6 +1,7 @@
 import {useRef, useState } from 'react'
 import './App.css'
 import { getDiceBonusText, getDieDesc, TDie } from './Dice';
+import React from 'react';
 
 export function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);

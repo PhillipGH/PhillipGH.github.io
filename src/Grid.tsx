@@ -41,7 +41,35 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     onEnter: (d: TDie) => void,
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
     getSquares: () => (null|HTMLDivElement)[][]
+    isDealing: boolean,
   }) {
+    const [lastLetter, setLastLetter] = useState<string>('');
+    const [shuffleLetters, setShuffleLetters] = useState<string[]>([]);
+    const intervalRef = useRef(0);
+
+    useEffect(() => {
+      if (props.die && props.die.letter !== lastLetter) {
+        clearInterval(intervalRef.current);
+        setLastLetter(props.die.letter);
+        const letters = [lastLetter];
+        setShuffleLetters(letters);
+        const ref1 = props.getSquares()[props.j][props.i];
+        if (ref1) {
+          ref1.addEventListener('animationend', function() {
+            if (letters.length == 0)
+              return;
+            letters.pop();
+            setShuffleLetters(letters);
+            ref1.style.animation = 'none';
+            ref1.offsetHeight;
+            ref1.style.animation = ''; 
+          });
+        }
+      }
+      return () => {
+        clearInterval(intervalRef.current);
+      };
+    }, [props.die?.letter]);
     if (props.die == null) {
       return <div className={'letterSpacer'}> </div>;
     }
@@ -51,22 +79,55 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     if (hasSideEffect) {
       letterClass += ' sideEffect';
     }
+
+    let x = props.i * SPACING;
+    let y = props.j * SPACING;
+    if (props.isDealing) {
+      x = 1.5* SPACING;
+      y = 1.5* SPACING;
+    }
+    const displayLetter = shuffleLetters.length > 0 ? shuffleLetters[shuffleLetters.length - 1] : props.die.letter;
+    const nextLetter = shuffleLetters.length > 1 ? shuffleLetters[shuffleLetters.length - 2] : props.die.letter;
+    const isRolling = shuffleLetters.length > 0;
+
+    let c = 'letterDivContainer';
+    if (!props.isRotating) {
+      c += ' transit';
+    }
+    if (isRolling) {
+      c += ' rolling';
+    }
+
     return (
       <div
       ref={(node) => {
         const list = props.getSquares();
+        if (!list) {
+          console.log('WHAT!!!');
+          return;
+        }
         list[props.j][props.i] = node;
       }}
-      style={{left: props.i * SPACING, top: props.j * SPACING}}
-      className={props.isRotating ? 'letterDivContainer' : 'letterDivContainer transit'}>
+      style={{left: x, top: y}}
+      className={c}>
       <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
           onPointerEnter={() => props.onEnter(die)}>
-            <p className={letterClass}>{die.letter.toUpperCase()}</p>
+            <p className={letterClass}>{displayLetter.toUpperCase()}</p>
         </div>
         {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
-      </div></div>
+      </div>
+      {isRolling? <div className={'nextLetter'}>
+        <div
+          className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}>
+            <p className={letterClass}>{nextLetter.toUpperCase()}</p>
+        </div>
+        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
+      </div>
+       : null}
+
+      </div>
     );
   }
   
@@ -141,6 +202,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   } ) {
     const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
     const [isMouseDown, setIsMouseDown] = useState(false);
+    const [isDealing, setIsDealing] = useState(true);
     let [points, setPoints] = useState<{x: number, y: number}[]>([]);
     useEffect(() => {
       function onMouseUp() {
@@ -157,6 +219,12 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     useEffect(() => {
       setPoints([]);
     }, [props.isRotating]);
+
+    useEffect(() => {
+      setTimeout(() => {
+        setIsDealing(false);
+      }, 10);
+    }, [])
 
   
     function getSquares() {
@@ -203,10 +271,10 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
           }
           return points;
       }
-      let sortedDice: {d:TDie | null, i:number, j:number}[] = [];
+      let sortedDice: {d:TDie | null, i:number, j:number, tmp: number}[] = [];
       for (let a = 0; a < props.dice.length; a++) {
         for (let b = 0; b < (props.dice[0] ?  props.dice[0].length : 0); b++) {
-          sortedDice.push({d: props.dice[a][b], i: b, j: a});
+          sortedDice.push({d: props.dice[a][b], i: b, j: a, tmp: a * props.dice.length + b + 1});
         }
       }
       sortedDice.sort((a,b) => (a.d?.id != null ? a.d?.id : -1) - (b.d?.id!= null ?  b.d?.id : -1));
@@ -222,11 +290,12 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   i={d.i}
                   j={d.j}
                   die={d.d}
-                  key={d.d?.id != null ? d.d?.id : -1}
+                  key={d.d?.id != null ? d.d?.id : -d.tmp}
                   isRotating={props.isRotating}
                   onClick={onClick}
                   onEnter={onEnter}
                   getSquares={getSquares}
+                  isDealing={false}
                 />
             )}
       <div style={{display : props.isRotating ? "none" : ""}}>
