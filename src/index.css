@@ -3,14 +3,14 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale; 
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -71,5 +71,25 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+      --color-text: #213547;
+      --color-table-odd: #ededed;
+      --background-color: white;
+      --background-color-trans: rgba(255,255,255,0.5);
+      --color-blue: blue;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #d0d0d0;
+    --color-table-odd: #2b2b2b;  
+    --background-color: rgb(26, 26, 26);
+    --background-color-trans: rgba(0,0,0,0.5);
+    --color-blue: rgb(158, 158, 255);
   }
 }
