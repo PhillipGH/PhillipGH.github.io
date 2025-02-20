@@ -41,7 +41,6 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     onEnter: (d: TDie) => void,
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
     getSquares: () => (null|HTMLDivElement)[][]
-    isDealing: boolean,
   }) {
     const [lastLetter, setLastLetter] = useState<string>('');
     const [shuffleLetters, setShuffleLetters] = useState<string[]>([]);
@@ -82,10 +81,6 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
 
     let x = props.i * SPACING;
     let y = props.j * SPACING;
-    if (props.isDealing) {
-      x = 1.5* SPACING;
-      y = 1.5* SPACING;
-    }
     const displayLetter = shuffleLetters.length > 0 ? shuffleLetters[shuffleLetters.length - 1] : props.die.letter;
     const nextLetter = shuffleLetters.length > 1 ? shuffleLetters[shuffleLetters.length - 2] : props.die.letter;
     const isRolling = shuffleLetters.length > 0;
@@ -202,7 +197,6 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   } ) {
     const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
     const [isMouseDown, setIsMouseDown] = useState(false);
-    const [isDealing, setIsDealing] = useState(true);
     let [points, setPoints] = useState<{x: number, y: number}[]>([]);
     useEffect(() => {
       function onMouseUp() {
@@ -219,13 +213,6 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     useEffect(() => {
       setPoints([]);
     }, [props.isRotating]);
-
-    useEffect(() => {
-      setTimeout(() => {
-        setIsDealing(false);
-      }, 10);
-    }, [])
-
   
     function getSquares() {
       if (!squaresRef.current) {
@@ -295,7 +282,6 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   onClick={onClick}
                   onEnter={onEnter}
                   getSquares={getSquares}
-                  isDealing={false}
                 />
             )}
       <div style={{display : props.isRotating ? "none" : ""}}>

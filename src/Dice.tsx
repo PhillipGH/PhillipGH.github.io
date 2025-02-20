@@ -11,6 +11,7 @@ export enum DiceBonus {
     B_MINUS3 = '-3',
     B_REROLL_WORD = 'reroll word',
     B_ROTATE = 'rotate',
+    B_SWAP = 'swap',
 }
 
 export enum DieDescription {
@@ -51,8 +52,6 @@ const STARTER_DICE_FACES = [
     'touoot',
     //'isfraa',
     'nrlhdo',
-
-    'nrlhdo',
 ];
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null }));
 
@@ -80,10 +79,12 @@ export const ADDITIONAL_DICE: TDie[] = [
 
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
+    { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
+// STARTER_DICE.push(ADDITIONAL_DICE[18]);
 
 export function getSquareBonusDisplay(die: TDie): string {
     switch (die.bonus) {
@@ -106,6 +107,8 @@ export function getSquareBonusDisplay(die: TDie): string {
             return '-3 reroll';
         case DiceBonus.B_ROTATE:
             return '🔃';
+        case DiceBonus.B_SWAP:
+            return 'swap';
         default:
             return '';
     }
@@ -133,6 +136,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: 'reroll word', description: 'when used, -3 points and all dice in word rerolled', hasSideEffect: true };
         case DiceBonus.B_ROTATE:
             return { title: '🔃 rotate dice', description: 'when used, rotates all the dice surrounding this one clockwise one position', hasSideEffect: true };
+        case DiceBonus.B_SWAP:
+            return { title: 'swap dice', description: 'when used in a word, swaps the position of the first and last letter of the word', hasSideEffect: true };
         default:
             throw new Error('unknown bonus type');
     }

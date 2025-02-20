@@ -4,7 +4,8 @@ import Grid from "./Grid";
 import React from 'react';
 import { TGameStats } from "./GameStats";
 
-const OVERRIDE_SCORE = 8;
+const OVERRIDE_SCORE = null;
+const OVERRIDE_TIME = null;
 
 function fib(n: number): number {
   if (n === 0) return 0;
@@ -220,7 +221,7 @@ function Board(props: {
     }
 
     function reroll() {
-      const columns = props.inputDice.length < 20 ? 4 : 5;
+      const columns = props.inputDice.length < 21 ? 4 : 5;
       setDice(chunkArray(rollBoard(props.inputDice), columns));
     }
     useEffect(() => {
@@ -242,12 +243,9 @@ function Board(props: {
     const [now, setNow] = useState(0);
     const intervalRef = useRef(0);
 
-    let requiredScore = 18 + 18 * props.level;
-    const TimeLimit = 105 + props.level * 5 + timeBonus;
+    let requiredScore = OVERRIDE_SCORE || 18 + 18 * props.level;
+    const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5 + timeBonus;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
-    if (OVERRIDE_SCORE) {
-      requiredScore = OVERRIDE_SCORE;
-    }
 
   function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
     if (props.dictionary.has(word)) {
@@ -268,7 +266,7 @@ function Board(props: {
           // TODO maybe we should make it so deletes can't delete other deletes?
           const ref2 = { isUsed: false };
           const slicedTokens = tokens.slice();
-          slicedTokens.splice(i,1);
+          slicedTokens.splice(i, 1);
           const slicedWord = slicedTokens.join('');
           let result = wordIsInDictionary(slicedWord, ref2);
           if (result) {
@@ -300,20 +298,21 @@ function Board(props: {
     return usedWord;
   }
 
-  function getDiceCoord(die: TDie) : [number, number] {
+  function getDiceCoord(die: TDie): [number, number] {
     for (let i = 0; i < dice.length; i++) {
       for (let j = 0; j < dice[i].length; j++) {
         if (dice[i][j] === die) {
-          return [i,j];
+          return [i, j];
         }
       }
     }
-    return [-1,-1];
+    return [-1, -1];
   }
 
   function mutateBoard() {
     let rerollWord = false;
     const rotationDice: TDie[] = [];
+    let swapDice = false;
     for (let i = 0; i < currentWord.length; i++) {
       let die = currentWord[i];
       switch (die.bonus) {
@@ -330,33 +329,44 @@ function Board(props: {
           break;
         case DiceBonus.B_ROTATE:
           rotationDice.push(die);
+          break;
+        case DiceBonus.B_SWAP:
+          swapDice = true; // could instead unswap?
+          break;
       }
     }
     if (rerollWord) {
       currentWord.map(die => rerollDie(die));
       setDice([...dice]);
     }
-    if (!rotationDice) {
-      return;
-    }
-    for (let index = 0; index < rotationDice.length; index++) {
-      const centerDie = rotationDice[index];
-      const [i, j] = getDiceCoord(centerDie);
-      const coords = ROTATION_COORDS.map(p => [i + p[0], j + p[1]]).filter(p => {
-        return p[0] >= 0 && p[0] < dice.length && p[1] >= 0 && p[1] < dice[0].length && dice[p[0]][p[1]] != null;
-      });
-      // rotate the dice
-      let tmp = dice[coords[coords.length - 1][0]][coords[coords.length - 1][1]];
-      for (let k = 0; k < coords.length; k++) {
-        let p = coords[k];
-        let tmp2 = dice[p[0]][p[1]];
-        dice[p[0]][p[1]] = tmp;
-        tmp = tmp2;
+    if (rotationDice) {
+      for (let index = 0; index < rotationDice.length; index++) {
+        const centerDie = rotationDice[index];
+        const [i, j] = getDiceCoord(centerDie);
+        const coords = ROTATION_COORDS.map(p => [i + p[0], j + p[1]]).filter(p => {
+          return p[0] >= 0 && p[0] < dice.length && p[1] >= 0 && p[1] < dice[0].length && dice[p[0]][p[1]] != null;
+        });
+        // rotate the dice
+        let tmp = dice[coords[coords.length - 1][0]][coords[coords.length - 1][1]];
+        for (let k = 0; k < coords.length; k++) {
+          let p = coords[k];
+          let tmp2 = dice[p[0]][p[1]];
+          dice[p[0]][p[1]] = tmp;
+          tmp = tmp2;
+        }
       }
+      setDice([...dice]);
     }
-    setDice([...dice]);
+    if (swapDice) {
+      const [x1, y1] = getDiceCoord(currentWord[0]);
+      const [x2, y2] = getDiceCoord(currentWord[currentWord.length - 1]);
+      let temp = dice[x1][y1];
+      dice[x1][y1] = dice[x2][y2];
+      dice[x2][y2] = temp;
+      setDice([...dice]);
+    }
   }
-  
+
   function commitWord() {
     let suffix: string | null = null;
     let scoreChange = 0;
@@ -383,6 +393,11 @@ function Board(props: {
           }
 
           props.stats.totalWords++;
+          if (props.stats.nLetterWords[word.length] == null) {
+            props.stats.nLetterWords[word.length] = 0;
+          }
+          props.stats.nLetterWords[word.length]++;
+
           if (word.length > props.stats.longestWord.length)
             props.stats.longestWord = word;
           if (scoreChange > props.stats.highestWordScore) {

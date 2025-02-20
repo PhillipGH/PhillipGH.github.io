@@ -1,5 +1,6 @@
-import { TDie } from "./Dice";
-import { Die } from "./RewardsPhase";
+import { STARTER_DICE, TDie } from "./Dice";
+import { DiceList } from "./RewardsPhase";
+import React from 'react';
 
 export type TGameStats = {
     totalWords: number,
@@ -9,6 +10,7 @@ export type TGameStats = {
     currentLevel: number,
     currentLevelScore: number,
     currentLevelRequiredScore: number,
+    nLetterWords : {[i:number]: number},
 };
 
 function GameStatsView(props: {
@@ -17,6 +19,15 @@ function GameStatsView(props: {
     dice: TDie[],
     onRestart: () => void,
 }) {
+
+    const nLetterWords = Object.keys(props.stats.nLetterWords).map(Number).sort().map(
+        (i: number) =>
+            <tr key={i}>
+                <td>{i}-Letter Words</td>
+                <td>{props.stats.nLetterWords[i]}</td>
+            </tr>
+    );
+
     return <div>
         <h1>Game Over!</h1>
         <button onClick={() => {
@@ -40,17 +51,14 @@ function GameStatsView(props: {
                 <td>Highest Scoring Word</td>
                 <td>{props.stats.highestWordScoreWord.toUpperCase()} ({props.stats.highestWordScore})</td>
             </tr>
+            {nLetterWords}
             <tr>
                 <td>Total Words</td>
                 <td>{props.stats.totalWords}</td>
             </tr>
         </tbody></table>
         <h2>Added Dice:</h2>
-        {props.dice.slice(15).reverse().map((die, i) =>
-            <div key={i} className='reward'>
-                <Die key={i} die={die} />
-            </div>
-        )}
+        <DiceList dice={props.dice.slice(STARTER_DICE.length).reverse()} />
     </div>;
 }
 

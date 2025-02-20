@@ -490,3 +490,11 @@
   padding: 20px;
   width: 80%
 }
+
+.listDice {
+  margin: 15px;
+}
+
+.dashed {
+  border-top: 3px dashed #bbb;
+}

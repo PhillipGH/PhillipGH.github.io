@@ -45,7 +45,9 @@ function Game(props: {dictionary: Set<string>}) {
     currentLevel: 0,
     currentLevelScore: 0,
     currentLevelRequiredScore: 0,
+    nLetterWords: {},
   });
+  const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
 
   useEffect(() => {
@@ -53,6 +55,15 @@ function Game(props: {dictionary: Set<string>}) {
           clearTimeout(timeoutRef.current);
         };
       }, []);
+
+  useEffect(() => {
+    if (allowScroll) {
+      document.body.classList.remove("noselect");
+    } else {
+      document.body.classList.add("noselect");
+    }
+    
+  }, [allowScroll]);
 
 
   function onWin() {
@@ -119,8 +130,6 @@ function Game(props: {dictionary: Set<string>}) {
   } else if (phase === 'stats') {
     content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;
   }
-
-  const allowScroll = phase === 'view_dice' || phase === 'stats';
   return <div className={allowScroll ? "game" : "game noselect"}>
       <p>Level {level}</p>
       {viewButton}

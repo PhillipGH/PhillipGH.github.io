@@ -3,7 +3,7 @@ import './App.css'
 import { getDiceBonusText, getDieDesc, TDie } from './Dice';
 import React from 'react';
 
-export function Die(props: { die: TDie, chosen?: boolean}) {
+function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);
     let bonus: React.JSX.Element | null = null;
     let description: React.JSX.Element | null = getDieDesc(props.die);
@@ -32,6 +32,23 @@ export function Die(props: { die: TDie, chosen?: boolean}) {
     </div>
 }
 
+export function DiceList(props: { dice: TDie[] }) {
+    const diceElements = props.dice.map((die, i) =>
+        <div key={i} className='listDice'>
+            <Die key={i} die={die} />
+        </div>
+    );
+    return diceElements.reduce((result, currentComponent) => {
+        return !result ? currentComponent : (
+            <React.Fragment>
+                {result}
+                <hr className='dashed'/>
+                {currentComponent}
+            </React.Fragment>
+        );
+    });
+}
+
 export function DiceView(props: { dice: TDie[] }) {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
     const letters = alphabet.map(letter => {
@@ -44,6 +61,9 @@ export function DiceView(props: { dice: TDie[] }) {
         return { letter: letter, count: count };
     });
     letters.sort(function (a, b) { return b.count - a.count });
+
+    const dice = props.dice.slice(0).reverse();
+    
 
     return <div id="rewardsPhase">
         <h2>Letter Breakdown:</h2>
@@ -59,11 +79,7 @@ export function DiceView(props: { dice: TDie[] }) {
 
         </tbody></table>
         <h2>Current Dice:</h2>
-        {props.dice.slice(0).reverse().map((die, i) =>
-            <div key={i} className='reward'>
-                <Die key={i} die={die} />
-            </div>
-        )}
+        <DiceList dice={dice} />
     </div>;
 }
 
