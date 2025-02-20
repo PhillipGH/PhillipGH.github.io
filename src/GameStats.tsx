@@ -1,6 +1,6 @@
 import { STARTER_DICE, TDie } from "./Dice";
 import { DiceList } from "./RewardsPhase";
-import React from 'react';
+// import React from 'react';
 
 export type TGameStats = {
     totalWords: number,

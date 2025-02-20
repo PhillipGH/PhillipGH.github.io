@@ -1,13 +1,13 @@
 import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import dictionaryRaw from './assets/dictionary1.txt?raw'
+
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import GameStatsView, { TGameStats } from './GameStats';
 
-function loadDictionary() {
+function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();
   dictionaryRaw.split('\n').forEach((word) => {
     dictionary.add(word.trim());
@@ -140,8 +140,15 @@ function Game(props: {dictionary: Set<string>}) {
 function App() {
   let [dictionary, setDictionary] = useState(new Set<string>());
   useEffect(() => {
-    setDictionary(loadDictionary());
+    import('./assets/dictionary1.txt?raw').then((dictionaryModule:any) => {
+      setDictionary(loadDictionary(dictionaryModule.default))
+    });
   }, []);
+  if(dictionary.size === 0) {
+    return <div id='loading'>
+      <h2>Loading Dictionary...</h2>
+      </div>;
+  }
   return <div className="app">
     <Game dictionary={dictionary}/>
   </div>;

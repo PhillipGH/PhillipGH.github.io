@@ -128,7 +128,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   
   function Lines(props: {points: {x: number, y: number}[], fadeOut: boolean}) {
     const [offset, setOffset] = useState<[number, number]>([0,0]);
-    const selfRef = useCallback((node) => {
+    const selfRef = useCallback((node: HTMLDivElement) => {
       if (!node) return;
       const offsetX = node.getBoundingClientRect().x -3;
       const offsetY = node.getBoundingClientRect().y - 3;

@@ -5,14 +5,6 @@
     { "path": "./tsconfig.node.json" },
   ],
   "compilerOptions": {
-    "allowUmdGlobalAccess": true,
-    "jsx": "react",
+    "jsx": "react-jsx"
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/**/*.ts",
-    "**/**/*.tsx"
-  ],
 }

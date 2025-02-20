@@ -49,6 +49,8 @@
   transform: translate3d(-28px, 0, 0px) rotate3D(0,1,0,-90deg);
 }
 
+
+
 .letterSpacer {
   width: 50px;
   height: 50px;
@@ -498,3 +500,11 @@
 .dashed {
   border-top: 3px dashed #bbb;
 }
+
+#loading {
+  animation: loadingAni 1.5s linear infinite;
+}
+
+@keyframes loadingAni {
+  0% {transform:rotateX(0deg);}
+  100% {transform:rotateX(360deg);}}
