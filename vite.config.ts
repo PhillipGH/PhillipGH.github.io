@@ -46,7 +46,8 @@ const manifestForPlugIn = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), VitePWA(manifestForPlugIn)],
-server: {
+  base: '/',
+  server: {
         host: true,
         //port: 5173
       }
