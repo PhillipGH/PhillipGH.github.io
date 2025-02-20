@@ -100,7 +100,7 @@
 }
 
 .groatate {
-  animation: rotateBoard 0.25s;
+  animation: rotateBoard 0.25s linear;
 }
 
 .groatateRev {
