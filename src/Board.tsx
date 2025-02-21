@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { DEL, DiceBonus, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
+import {useEffect, useRef, useState } from "react";
+import { DEL, DiceBonus, EXCLAIM, nextAlphabetLetter, REROLL_TIME_BONUS, TDie } from "./Dice";
 import Grid from "./Grid";
 import React from 'react';
 import { TGameStats } from "./GameStats";
+import CoordinateSet, { runUnion } from "./unionfind";
 
 const OVERRIDE_SCORE = null;
 const OVERRIDE_TIME = null;
@@ -135,6 +136,9 @@ function chunkArray<T>(arr: T[], columns: number) {
       if (tokens[i] == DEL) {
         length -= 2;
       }
+      if (tokens[i] == EXCLAIM) {
+        length -= EXCLAIM.length;
+      }
     }
     if (length < 3) {
       return null;
@@ -161,6 +165,9 @@ function DisplayWord(props: {
     for (let i = 0; i < tokens.length; i++) {
       if (tokens[i] === DEL) {
         delCounter++;
+      } else if (tokens[i] == EXCLAIM) {
+        if (i == tokens.length - 1)
+          w += tokens[i];
       } else {
         w += tokens[i];
       }
@@ -251,12 +258,15 @@ function Board(props: {
     if (props.dictionary.has(word)) {
       return word;
     }
-    const index = word.search(/\/|\*|🔙/);
+    const index = word.search(/\/|\*|🔙|!/);
     let usedWord: string | null = null;
     if (index > -1) {
       let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
       let regex = /\*/;
-      if (word[index] === '/') {
+      if (word[index] === EXCLAIM[0]) {
+        word = word.replace(EXCLAIM, '');
+        return wordIsInDictionary(word, ref);
+      } else if (word[index] === '/') {
         alphabet = [word[index - 1], word[index + 1]];
         regex = /[a-z]\/[a-z]/;
       } else if (word[index] === DEL[0]) {
@@ -340,6 +350,91 @@ function Board(props: {
       setDice([...dice]);
     }
     if (rotationDice) {
+      const moves: { x: number, y: number }[][] = [];
+      let rotationPoints = new CoordinateSet();
+      for (let index = 0; index < rotationDice.length; index++) {
+        const centerDie = rotationDice[index];
+        const [i, j] = getDiceCoord(centerDie);
+        rotationPoints.add(i, j);
+        const coords = ROTATION_COORDS.map(p => { return { x: i + p[0], y: j + p[1] } });
+        moves.push(coords);
+      }
+      // combine moves that form the same cycle
+      const edges: [number, number][] = [];
+      for (let index = 0; index < moves.length; index++) {
+        for (let index2 = index + 1; index2 < moves.length; index2++) {
+          if (moves[index].find(p1 => {
+            return moves[index2].find(p2 => p1.x === p2.x && p1.y === p2.y)
+          })) {
+            edges.push([index, index2]);
+          }
+        }
+      }
+      const cycles = runUnion(moves.length, edges);
+
+      // now find the longest path that follows the rules in each cycle
+      for (let cycleIndex = 0; cycleIndex < cycles.length; cycleIndex++) {
+        // first, find all valid points for the path.
+        let validPoints = new CoordinateSet();
+        cycles[cycleIndex].forEach(movesIndex => {
+          moves[movesIndex].forEach(p => {
+            if (!rotationPoints.has(p.x, p.y))
+              validPoints.add(p.x, p.y);
+          })
+        });
+
+        // now start constructing the path
+        // find the top leftmost square and go x -1
+        // got coords confused at some point so it's actually bottom left going up
+        const startPoint = validPoints.getRightmostTop();
+        const startPath = [startPoint, { x: startPoint.x - 1, y: startPoint.y }];
+        function dfs(path: { x: number, y: number }[]): null | { x: number, y: number }[] {
+          const last = path[path.length - 1];
+          if (!validPoints.has(last.x, last.y)) {
+            return null;
+          }
+          for (let i = 0; i < path.length - 1; i++) {
+            if (path[i].x === last.x && path[i].y === last.y) {
+              if (i === 0) {
+                return path;
+              } else {
+                return null;
+              }
+            }
+          }
+          const paths = [
+            dfs([...path, { x: last.x + 1, y: last.y }]),
+            dfs([...path, { x: last.x, y: last.y + 1 }]),
+            dfs([...path, { x: last.x - 1, y: last.y }]),
+            dfs([...path, { x: last.x, y: last.y - 1 }]),
+          ];
+          const validPaths = paths.filter(p => p != null);
+          if (paths.length === 0) {
+            return null;
+          }
+          validPaths.sort((a, b) => b.length - a.length);
+          return validPaths[0];
+        }
+
+        let path = dfs(startPath);
+        if (path !== null) {
+          path = path.slice(0, path.length - 1);
+          // filter out invalid squares
+          path = path.filter(p => {
+            return p.x >= 0 && p.x < dice.length && p.y >= 0 && p.y < dice[0].length && dice[p.x][p.y] != null;
+          });
+          // rotate the dice
+          let tmp = dice[path[path.length - 1].x][path[path.length - 1].y];
+          for (let k = 0; k < path.length; k++) {
+            let p = path[k];
+            let tmp2 = dice[p.x][p.y];
+            dice[p.x][p.y] = tmp;
+            tmp = tmp2;
+          }
+        }
+      }
+
+      /*
       for (let index = 0; index < rotationDice.length; index++) {
         const centerDie = rotationDice[index];
         const [i, j] = getDiceCoord(centerDie);
@@ -355,6 +450,8 @@ function Board(props: {
           tmp = tmp2;
         }
       }
+        */
+
       setDice([...dice]);
     }
     if (swapDice) {
@@ -363,6 +460,20 @@ function Board(props: {
       let temp = dice[x1][y1];
       dice[x1][y1] = dice[x2][y2];
       dice[x2][y2] = temp;
+      setDice([...dice]);
+    }
+    if (currentWord[currentWord.length -1].letter.endsWith(EXCLAIM)) {
+      for (let index = 0; index < currentWord.length; index++) {
+        const die = currentWord[index];
+        const [i, j0] = getDiceCoord(die);
+        for (let j = j0; j < dice[0].length; j++) {
+          if (j < dice[0].length - 1) {
+            dice[i][j] = dice[i][j+1];
+          } else {
+            dice[i][j] = null;
+          }
+        }
+      }
       setDice([...dice]);
     }
   }

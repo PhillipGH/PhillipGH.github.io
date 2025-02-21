@@ -12,6 +12,7 @@ export enum DiceBonus {
     B_REROLL_WORD = 'reroll word',
     B_ROTATE = 'rotate',
     B_SWAP = 'swap',
+    B_4X = '',
 }
 
 export enum DieDescription {
@@ -25,6 +26,7 @@ export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, c
 export const REROLL_TIME_BONUS = 30;
 
 export const DEL = '🔙'; // also update the regex in Board.tsx!
+export const EXCLAIM  = '!'; // also update the regex in Board.tsx!
 
 const STARTER_DICE_FACES = [
     //'ennnda',
@@ -80,11 +82,12 @@ export const ADDITIONAL_DICE: TDie[] = [
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
     { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
+    //{ faces: [EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM,], bonus: null },
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
-// STARTER_DICE.push(ADDITIONAL_DICE[18]);
+// STARTER_DICE.push(ADDITIONAL_DICE[17]);
 
 export function getSquareBonusDisplay(die: TDie): string {
     switch (die.bonus) {
