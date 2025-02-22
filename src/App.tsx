@@ -131,7 +131,7 @@ function Game(props: {dictionary: Set<string>}) {
     content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;
   }
   return <div className={allowScroll ? "game" : "game noselect"}>
-      <div id='topBar'><p>Level {level}</p><sup>v0.1.1</sup></div>
+      <div id='topBar'><p>Level {level}</p><sup>v0.1.1.2</sup></div>
       {viewButton}
       {content}
     </div>;

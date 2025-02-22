@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+/*
 import { VitePWA } from "vite-plugin-pwa";
 
 const manifestForPlugIn = {
@@ -42,13 +43,19 @@ const manifestForPlugIn = {
   orientation:'portrait' as const
   }
 }
+  */
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), VitePWA(manifestForPlugIn)],
+  // plugins: [react(), VitePWA(manifestForPlugIn)],
+  plugins: [react()],
   base: '/',
   server: {
         host: true,
         //port: 5173
-      }
+      },
+  build: {
+    emptyOutDir: true,
+    copyPublicDir: false,
+  }
 })
