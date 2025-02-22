@@ -5,6 +5,9 @@ import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 
+// missing words: natal
+// fake words: ted, tho lite
+
 const OVERRIDE_SCORE = null;
 const OVERRIDE_TIME = null;
 
