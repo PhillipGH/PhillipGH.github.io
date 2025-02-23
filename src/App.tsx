@@ -7,6 +7,8 @@ import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import GameStatsView, { TGameStats } from './GameStats';
 
+const VERSION = 'v0.1.1.3';
+
 function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();
   dictionaryRaw.split('\n').forEach((word) => {
@@ -131,7 +133,7 @@ function Game(props: {dictionary: Set<string>}) {
     content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;
   }
   return <div className={allowScroll ? "game" : "game noselect"}>
-      <div id='topBar'><p>Level {level}</p><sup>v0.1.1.2</sup></div>
+      <div id='topBar'><p>Level {level}</p><sup>{VERSION}</sup></div>
       {viewButton}
       {content}
     </div>;

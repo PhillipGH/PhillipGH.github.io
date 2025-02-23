@@ -10,6 +10,7 @@ import CoordinateSet, { runUnion } from "./unionfind";
 
 const OVERRIDE_SCORE = null;
 const OVERRIDE_TIME = null;
+const ALL_WORDS_VALID = false;
 
 function fib(n: number): number {
   if (n === 0) return 0;
@@ -258,6 +259,9 @@ function Board(props: {
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
   function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
+    if (ALL_WORDS_VALID) {
+      return word;
+    }
     if (props.dictionary.has(word)) {
       return word;
     }
@@ -354,6 +358,7 @@ function Board(props: {
     }
     if (rotationDice) {
       const moves: { x: number, y: number }[][] = [];
+      const centerPoints: { x: number, y: number }[] = [];
       let rotationPoints = new CoordinateSet();
       for (let index = 0; index < rotationDice.length; index++) {
         const centerDie = rotationDice[index];
@@ -361,15 +366,23 @@ function Board(props: {
         rotationPoints.add(i, j);
         const coords = ROTATION_COORDS.map(p => { return { x: i + p[0], y: j + p[1] } });
         moves.push(coords);
+        centerPoints.push( { x: i, y: j});
       }
       // combine moves that form the same cycle
       const edges: [number, number][] = [];
+      const filteredCornerPoints = new CoordinateSet();
       for (let index = 0; index < moves.length; index++) {
         for (let index2 = index + 1; index2 < moves.length; index2++) {
-          if (moves[index].find(p1 => {
-            return moves[index2].find(p2 => p1.x === p2.x && p1.y === p2.y)
-          })) {
+          // only combine if there's more than one overlap square,
+          // else if there's one then don't combine and add the overlap
+          // square to the special list of squares to filter out of paths.
+          const overlap = moves[index].filter(p1 =>
+            moves[index2].find(p2 => p1.x === p2.x && p1.y === p2.y)
+          );
+          if (overlap.length > 1) {
             edges.push([index, index2]);
+          } else if (overlap.length === 1) {
+            filteredCornerPoints.add(overlap[0].x, overlap[0].y);
           }
         }
       }
@@ -418,13 +431,18 @@ function Board(props: {
           validPaths.sort((a, b) => b.length - a.length);
           return validPaths[0];
         }
-
         let path = dfs(startPath);
-        if (path !== null) {
+        if (path != null) {
           path = path.slice(0, path.length - 1);
+
           // filter out invalid squares
           path = path.filter(p => {
-            return p.x >= 0 && p.x < dice.length && p.y >= 0 && p.y < dice[0].length && dice[p.x][p.y] != null;
+            return p.x >= 0 &&
+              p.x < dice.length &&
+              p.y >= 0 &&
+              p.y < dice[0].length &&
+              dice[p.x][p.y] != null &&
+              !filteredCornerPoints.has(p.x,p.y);
           });
           // rotate the dice
           let tmp = dice[path[path.length - 1].x][path[path.length - 1].y];
@@ -436,25 +454,6 @@ function Board(props: {
           }
         }
       }
-
-      /*
-      for (let index = 0; index < rotationDice.length; index++) {
-        const centerDie = rotationDice[index];
-        const [i, j] = getDiceCoord(centerDie);
-        const coords = ROTATION_COORDS.map(p => [i + p[0], j + p[1]]).filter(p => {
-          return p[0] >= 0 && p[0] < dice.length && p[1] >= 0 && p[1] < dice[0].length && dice[p[0]][p[1]] != null;
-        });
-        // rotate the dice
-        let tmp = dice[coords[coords.length - 1][0]][coords[coords.length - 1][1]];
-        for (let k = 0; k < coords.length; k++) {
-          let p = coords[k];
-          let tmp2 = dice[p[0]][p[1]];
-          dice[p[0]][p[1]] = tmp;
-          tmp = tmp2;
-        }
-      }
-        */
-
       setDice([...dice]);
     }
     if (swapDice) {
