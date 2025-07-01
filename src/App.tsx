@@ -7,7 +7,7 @@ import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import GameStatsView, { TGameStats } from './GameStats';
 
-const VERSION = 'v0.1.1.4';
+const VERSION = 'v0.1.1.5';
 
 function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();

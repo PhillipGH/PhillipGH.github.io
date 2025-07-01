@@ -12,6 +12,8 @@ const OVERRIDE_SCORE = null;
 const OVERRIDE_TIME = null;
 const ALL_WORDS_VALID = false;
 
+const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
 function fib(n: number): number {
   if (n === 0) return 0;
   if (n === 1) return 1;
@@ -261,57 +263,75 @@ function Board(props: {
     const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5 + timeBonus;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
-  function wordIsInDictionary(word: string, ref = { isUsed: false }): string | null {
-    if (ALL_WORDS_VALID) {
+  function wordIsInDictionary(word: TDie[]): {die: TDie, contribution: string}[] | null {
+    const wordMapped = word.map(d => ({die: d, contribution: d.letter}));
+    return wordIsInDictionaryHelper(wordMapped);
+  }
+
+  function wordIsInDictionaryHelper(word: {die: TDie, contribution: string}[], ref = { isUsed: false }): {die: TDie, contribution: string}[] | null {
+    let stringWord = word.map((d) => d.contribution).join("");
+    if (ALL_WORDS_VALID || props.dictionary.has(stringWord)) {
       return word;
     }
-    if (props.dictionary.has(word)) {
-      return word;
-    }
-    const index = word.search(/\/|\*|🔙|!/);
-    let usedWord: string | null = null;
-    if (index > -1) {
-      let alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-      let regex = /\*/;
-      if (word[index] === EXCLAIM[0]) {
-        word = word.replace(EXCLAIM, '');
-        return wordIsInDictionary(word, ref);
-      } else if (word[index] === '/') {
-        alphabet = [word[index - 1], word[index + 1]];
-        regex = /[a-z]\/[a-z]/;
-      } else if (word[index] === DEL[0]) {
-        word = word.replace(DEL, '');
-        const tokens = tokenizeWord(word);
-        for (let i = 0; i < tokens.length; i++) {
-          // TODO maybe we should make it so deletes can't delete other deletes?
-          const ref2 = { isUsed: false };
-          const slicedTokens = tokens.slice();
-          slicedTokens.splice(i, 1);
-          const slicedWord = slicedTokens.join('');
-          let result = wordIsInDictionary(slicedWord, ref2);
-          if (result) {
-            if (ref2.isUsed || usedWords.has(result)) {
-              ref.isUsed = true;
-              usedWord = result;
-            } else {
-              ref.isUsed = false;
-              return result;
-            }
-          }
-        }
-        return usedWord;
+    let dieIndex = -1;
+    let letterIndex = -1;
+    for (let i = 0; i < word.length; i++) {
+      letterIndex = word[i].contribution.search(/\/|\*|🔙|!/);
+      if (letterIndex > -1) {
+        dieIndex = i;
+        break;
       }
-      for (let i = 0; i < alphabet.length; i++) {
+    }
+
+    if (dieIndex < 0) {
+      return null;
+    }
+    let usedWord: {die: TDie, contribution: string}[] | null = null;
+    let alphabet = ALPHABET;
+    let regex = /\*/;
+
+    let dieStr = word[dieIndex].contribution;
+    // if (word[index] === EXCLAIM[0]) {
+    //   word = word.replace(EXCLAIM, "");
+    //   return wordIsInDictionary(word, ref); } else
+    if (dieStr[letterIndex] === "/") {
+      alphabet = [dieStr[letterIndex - 1], dieStr[letterIndex + 1]];
+      regex = /[a-z]\/[a-z]/;
+    } else if (dieStr[letterIndex] === DEL[0]) {
+      // remove dieIndex from word
+      word.splice(dieIndex, 1);
+      //const tokens = tokenizeWord(word);
+      for (let i = 0; i < word.length; i++) {
+        // TODO maybe we should make it so deletes can't delete other deletes?
         const ref2 = { isUsed: false };
-        let result = wordIsInDictionary(word.replace(regex, alphabet[i]), ref2);
+        const slicedDice = word.slice();
+        slicedDice.splice(i, 1);
+        let result = wordIsInDictionaryHelper(slicedDice, ref2);
         if (result) {
-          if (ref2.isUsed || usedWords.has(result)) {
+          if (ref2.isUsed || usedWords.has(result.map((d) => d.contribution).join(""))) {
             ref.isUsed = true;
             usedWord = result;
           } else {
             ref.isUsed = false;
             return result;
           }
+        }
+      }
+      return usedWord;
+    }
+    for (let i = 0; i < alphabet.length; i++) {
+      const ref2 = { isUsed: false };
+      // const newWord = word.slice();
+      let newString = dieStr.replace(regex, alphabet[i]);
+      word[dieIndex].contribution = newString;
+      let result = wordIsInDictionaryHelper(word, ref2);
+      if (result) {
+        if (ref2.isUsed || usedWords.has(result.map((d) => d.contribution).join(""))) {
+          ref.isUsed = true;
+          usedWord = result;
+        } else {
+          ref.isUsed = false;
+          return result;
         }
       }
     }
@@ -329,12 +349,12 @@ function Board(props: {
     return [-1, -1];
   }
 
-  function mutateBoard() {
+  function mutateBoard(word: {die: TDie, contribution: string}[]) {
     let rerollWord = false;
     const rotationDice: TDie[] = [];
     let swapDice = false;
-    for (let i = 0; i < currentWord.length; i++) {
-      let die = currentWord[i];
+    for (let i = 0; i < word.length; i++) {
+      let die = word[i].die;
       switch (die.bonus) {
         case DiceBonus.B_ALPHABET:
           die.letter = nextAlphabetLetter(die.letter);
@@ -356,7 +376,7 @@ function Board(props: {
       }
     }
     if (rerollWord) {
-      currentWord.map(die => rerollDie(die));
+      word.map(die => rerollDie(die.die));
       setDice([...dice]);
     }
     if (rotationDice) {
@@ -460,16 +480,16 @@ function Board(props: {
       setDice([...dice]);
     }
     if (swapDice) {
-      const [x1, y1] = getDiceCoord(currentWord[0]);
-      const [x2, y2] = getDiceCoord(currentWord[currentWord.length - 1]);
+      const [x1, y1] = getDiceCoord(word[0].die);
+      const [x2, y2] = getDiceCoord(word[word.length - 1].die);
       let temp = dice[x1][y1];
       dice[x1][y1] = dice[x2][y2];
       dice[x2][y2] = temp;
       setDice([...dice]);
     }
-    if (currentWord[currentWord.length -1].letter.endsWith(EXCLAIM)) {
-      for (let index = 0; index < currentWord.length; index++) {
-        const die = currentWord[index];
+    if (word[word.length -1].die.letter.endsWith(EXCLAIM)) {
+      for (let index = 0; index < word.length; index++) {
+        const die = word[index].die;
         const [i, j0] = getDiceCoord(die);
         for (let j = j0; j < dice[0].length; j++) {
           if (j < dice[0].length - 1) {
@@ -487,12 +507,12 @@ function Board(props: {
     let suffix: string | null = null;
     let scoreChange = 0;
     let word = currentWord.map(d => d.letter).join('');
-    let finalWord: string | null = null;
     if (word.length === 0) {
       return;
     }
-    if (finalWord = wordIsInDictionary(word)) {
-      word = finalWord;
+    const result =  wordIsInDictionary(currentWord);
+    if (result) {
+      word = result.map((d) => d.contribution).join("");;
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
       } else {
@@ -521,7 +541,7 @@ function Board(props: {
             props.stats.highestWordScoreWord = word;
           }
           props.setStats(props.stats);
-          mutateBoard();
+          mutateBoard(result);
         }
       }
     } else {
