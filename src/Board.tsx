@@ -259,7 +259,7 @@ function Board(props: {
 
     const intervalRef = useRef(0);
 
-    let requiredScore = OVERRIDE_SCORE || 18 + 18 * props.level;
+    let requiredScore = OVERRIDE_SCORE || 30 + props.level * 5 + Math.round(15*Math.log(props.level));
     const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5 + timeBonus;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
