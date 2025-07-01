@@ -6,7 +6,7 @@ import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 
 // missing words: natal
-// fake words: ted, tho lite
+// fake words: ted, tho, lite
 
 const OVERRIDE_SCORE = null;
 const OVERRIDE_TIME = null;
@@ -252,6 +252,9 @@ function Board(props: {
     //timer
     const [startTime, setStartTime] = useState(0);
     const [now, setNow] = useState(0);
+    const [totalTimeSinceStart, setTotalTimeSinceStart] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+
     const intervalRef = useRef(0);
 
     let requiredScore = OVERRIDE_SCORE || 18 + 18 * props.level;
@@ -529,13 +532,25 @@ function Board(props: {
     setCurrentWord([]);
   }
 
+    // called at start and for unpause
     function handleStart() {
       setStartTime(Date.now());
       setNow(Date.now());
       clearInterval(intervalRef.current);
+      setIsPaused(false);
       intervalRef.current = setInterval(() => {
         setNow(Date.now());
       }, 10);
+    }
+
+    function handlePause() {
+      if (isPaused)
+        return;
+      clearInterval(intervalRef.current);
+      setIsPaused(true);
+      setNow(Date.now());
+      setStartTime(Date.now());
+      setTotalTimeSinceStart(totalTimeSinceStart + Date.now() - startTime);
     }
     
     useEffect(() => {
@@ -545,9 +560,12 @@ function Board(props: {
       };
     }, []);
 
+    let secondsPassed = (now - startTime + totalTimeSinceStart) / 1000;
+    let secondsLeft = Math.floor(TimeLimit - secondsPassed);
+    let minutes = Math.floor(secondsLeft / 60);
+    let seconds = secondsLeft % 60;
+
     useEffect(() => {
-      let secondsPassed = Math.round((now - startTime) / 1000);
-      let secondsLeft = TimeLimit - secondsPassed;
       if (secondsLeft < 0) {
         clearInterval(intervalRef.current);
         props.stats.currentLevel = props.level;
@@ -556,11 +574,18 @@ function Board(props: {
         props.setStats(props.stats);
         props.onLose();
       }
-    }, [now, startTime, timeBonus, score]);
+    }, [secondsLeft, timeBonus, score]);
   
+    const timerHueProgress = Math.min(secondsLeft, 45) / 45.0;
+    const timerHue = timerHueProgress * 120;
+    const timerSaturationProgress = 1 - Math.min(secondsLeft, 45) / 45.0;
+    const timerSaturation = timerSaturationProgress * 70.0 + 30.0;
+  
+    let progress = Math.min((score / requiredScore) * 100, 100);
+
     let overlay : null | JSX.Element = null;
     if (score >= requiredScore) {
-      overlay = <div id="winOverlay">
+      overlay = <div id="boardOverlay" className="winOverlay">
         <div>
           <h2>Level {props.level} Complete!</h2>
           <button onClick={() => {
@@ -569,18 +594,16 @@ function Board(props: {
         </div>
       </div>;
     }
-
-    let secondsPassed = Math.round((now - startTime) / 1000);
-    let secondsLeft = TimeLimit - secondsPassed;
-    let minutes = Math.floor(secondsLeft / 60);
-    let seconds = secondsLeft % 60;
-
-    const timerHueProgress = Math.min(secondsLeft, 45) / 45.0;
-    const timerHue = timerHueProgress * 120;
-    const timerSaturationProgress = 1 - Math.min(secondsLeft, 45) / 45.0;
-    const timerSaturation = timerSaturationProgress * 70.0 + 30.0;
-  
-    let progress = Math.min((score / requiredScore) * 100, 100);
+    if (isPaused) {
+      overlay = <div id="boardOverlay">
+        <div>
+          <h2>Paused</h2>
+          <button onClick={() => {
+            handleStart();
+          }}>Continue</button>
+        </div>
+      </div>;
+    }
 
     const rotateButton = <button onClick={() => {
       if (isRotating) return;
@@ -592,7 +615,10 @@ function Board(props: {
       }, 250);
       
     }}>Rotate</button>;
+
+    const pauseButton = <button onClick={handlePause}>Pause</button>;
   
+ 
     let rerollButton : null | React.JSX.Element = null;
     if  (props.rerollCounter !== null) {
       rerollButton = <button disabled={props.rerollCounter <= 0} onClick={() => {
@@ -600,7 +626,7 @@ function Board(props: {
       }}>Reroll +30s ({props.rerollCounter})</button>;
     }
     return <div>
-      <div className="buttons">{rerollButton}{rotateButton}</div>
+      <div className="buttons">{rerollButton}{rotateButton}{pauseButton}</div>
             
       <h1 className="timer" style={{color:'hsl('+ timerHue +', ' + timerSaturation + '%, 50%)'}}>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
       <div id="progressbar">
