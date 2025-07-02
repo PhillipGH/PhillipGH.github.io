@@ -260,7 +260,7 @@ function Board(props: {
     const intervalRef = useRef(0);
 
     let requiredScore = OVERRIDE_SCORE || 30 + props.level * 5 + Math.round(15*Math.log(props.level));
-    const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5 + timeBonus;
+    const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
   function wordIsInDictionary(word: TDie[]): {die: TDie, contribution: string}[] | null {
@@ -581,20 +581,24 @@ function Board(props: {
     }, []);
 
     let secondsPassed = (now - startTime + totalTimeSinceStart) / 1000;
-    let secondsLeft = Math.floor(TimeLimit - secondsPassed);
+    let secondsLeft = Math.floor(TimeLimit + timeBonus - secondsPassed);
     let minutes = Math.floor(secondsLeft / 60);
     let seconds = secondsLeft % 60;
 
     useEffect(() => {
       if (secondsLeft < 0) {
-        clearInterval(intervalRef.current);
-        props.stats.currentLevel = props.level;
-        props.stats.currentLevelRequiredScore = requiredScore;
-        props.stats.currentLevelScore = score;
-        props.setStats(props.stats);
-        props.onLose();
+        if ((props.rerollCounter || 0) > 0) {
+          useRerollCharge();
+        } else {
+          clearInterval(intervalRef.current);
+          props.stats.currentLevel = props.level;
+          props.stats.currentLevelRequiredScore = requiredScore;
+          props.stats.currentLevelScore = score;
+          props.setStats(props.stats);
+          props.onLose();
+        }
       }
-    }, [secondsLeft, timeBonus, score]);
+    }, [secondsLeft, score]);
   
     const timerHueProgress = Math.min(secondsLeft, 45) / 45.0;
     const timerHue = timerHueProgress * 120;
