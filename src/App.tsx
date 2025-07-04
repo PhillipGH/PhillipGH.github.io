@@ -3,7 +3,7 @@ import './App.css'
 import React from 'react';
 
 import RewardsPhase, { DiceView } from './RewardsPhase';
-import { ADDITIONAL_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
+import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import GameStatsView, { TGameStats } from './GameStats';
 
@@ -35,7 +35,7 @@ function getNRandom<T>(arr: T[], n: number): T[] {
 
 function Game(props: {dictionary: Set<string>}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
-  const [choices, setChoices] = useState<TDie[]>(getNRandom(ADDITIONAL_DICE, 3));
+  const [choices, setChoices] = useState<TDie[]>([]);
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
   const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice' | 'stats'>('rewards');
@@ -55,6 +55,7 @@ function Game(props: {dictionary: Set<string>}) {
   const timeoutRef = useRef(0);
 
   useEffect(() => {
+      onRestart();
         return () => {
           clearTimeout(timeoutRef.current);
         };
@@ -74,7 +75,11 @@ function Game(props: {dictionary: Set<string>}) {
     setLevel(level + 1);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
-    setChoices(getNRandom(ADDITIONAL_DICE, 3));
+    if ((level + 1) % 3 === 0) {
+      setChoices(getNRandom(RARE_DICE, 2).concat(getNRandom(BASIC_DICE, 1)));
+    } else {
+      setChoices(getNRandom(BASIC_DICE, 3));
+    }
   }
   function onLose() {
     setPhase('stats');
@@ -85,7 +90,7 @@ function Game(props: {dictionary: Set<string>}) {
     setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
-    setChoices(getNRandom(ADDITIONAL_DICE, 3));
+    setChoices(getNRandom(BASIC_DICE, 3));
     setRerollCounter(null);
   }
 

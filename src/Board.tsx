@@ -352,7 +352,7 @@ function Board(props: {
   function mutateBoard(word: {die: TDie, contribution: string}[]) {
     let rerollWord = false;
     const rotationDice: TDie[] = [];
-    let swapDice = false;
+    let swapDice = 0;
     for (let i = 0; i < word.length; i++) {
       let die = word[i].die;
       switch (die.bonus) {
@@ -371,7 +371,7 @@ function Board(props: {
           rotationDice.push(die);
           break;
         case DiceBonus.B_SWAP:
-          swapDice = true; // could instead unswap?
+          swapDice++; // could instead unswap?
           break;
       }
     }
@@ -479,12 +479,13 @@ function Board(props: {
       }
       setDice([...dice]);
     }
-    if (swapDice) {
+    if (swapDice > 0) {
       const [x1, y1] = getDiceCoord(word[0].die);
       const [x2, y2] = getDiceCoord(word[word.length - 1].die);
       let temp = dice[x1][y1];
       dice[x1][y1] = dice[x2][y2];
       dice[x2][y2] = temp;
+      setTimeBonus(t => t + 5 * swapDice);
       setDice([...dice]);
     }
     if (word[word.length -1].die.letter.endsWith(EXCLAIM)) {

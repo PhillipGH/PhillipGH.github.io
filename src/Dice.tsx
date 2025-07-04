@@ -57,32 +57,30 @@ const STARTER_DICE_FACES = [
 ];
 export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: faces[0], faces: [...faces], bonus: null }));
 
-export const ADDITIONAL_DICE: TDie[] = [
+export const BASIC_DICE: TDie[] = [
     { faces: ['ing', 'th', 'er', 'in', 'ed', 'tion'], bonus: null },
     { faces: ['s', 's', 's', 'e', 'n', 'a'], bonus: null },
-
     { faces: ['ch', 'ch', 'th', 'sh', 'ck', 'ck'], bonus: DiceBonus.B_1_REROLL },
     { faces: ['a/b', 'e/f', 'h/i', 'o/k', 'u/y', 'a/y'], bonus: DiceBonus.B_1_REROLL },
     { faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL },
     { faces: ['p', 's', 't', 'c', 'e', 'm'], bonus: DiceBonus.B_2_REROLL },
-
     { faces: ['h', 'm', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4 },
     { faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS4 },
     { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS4 },
-
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
-    { faces: ['m', 'a', 'd', 'd', 'y', 'f'], bonus: DiceBonus.B_2X, desc: DieDescription.HEARTS},
 
+].map(d => ({ letter: d.faces[0], ...d }));
+
+export const RARE_DICE: TDie[] = [
+    { faces: ['m', 'a', 'd', 'd', 'y', 'f'], bonus: DiceBonus.B_2X, desc: DieDescription.HEARTS},
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
     { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS3, desc: DieDescription.ASTERIX },
     { faces: [DEL, DEL, DEL, DEL, DEL, DEL], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
-
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
     { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
-    //{ faces: [EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM, EXCLAIM,], bonus: null },
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
@@ -140,7 +138,7 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
         case DiceBonus.B_ROTATE:
             return { title: '🔃 rotate dice', description: 'when used, rotates all the dice surrounding this one clockwise one position', hasSideEffect: true };
         case DiceBonus.B_SWAP:
-            return { title: 'swap dice', description: 'when used in a word, swaps the position of the first and last letter of the word', hasSideEffect: true };
+            return { title: 'swap dice', description: 'When used in a word, swaps the position of the first and last letter of the word and +5 seconds of time', hasSideEffect: true };
         default:
             throw new Error('unknown bonus type');
     }
