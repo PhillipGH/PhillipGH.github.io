@@ -14,10 +14,29 @@ const ALL_WORDS_VALID = false;
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
-function fib(n: number): number {
-  if (n === 0) return 0;
-  if (n === 1) return 1;
-  return fib(n - 1) + fib(n - 2);
+// for balancing:
+// for (let i = 3; i <= 12; i++) {
+//   console.log(i, i - 3 + fib(i-2) * 3, getBaseScore(i));
+// }
+
+// for (let i = 1; i <= 15; i++) {
+//   console.log(i, getRequiredScore(i), 7 + i * 2 + Math.round(4*Math.log(i)));
+// }
+
+// function fib(n: number): number {
+//   if (n === 0) return 0;
+//   if (n === 1) return 1;
+//   return fib(n - 1) + fib(n - 2);
+// }
+
+function getBaseScore(n: number): number {
+  if (n <= 4) return 1;
+  if (n === 5) return 3;
+  return getBaseScore(n - 1) * 2 - 1;
+}
+
+function getRequiredScore(level: number): number {
+  return 7 + level * 2 + Math.round(4*Math.log(level));
 }
 
 const ROTATION_COORDS: [number, number][] = [
@@ -110,8 +129,8 @@ function chunkArray<T>(arr: T[], columns: number) {
     let multiplier = 1;
     let bonus = 0;
     let penalty = 0;
-    if (dice[0].bonus === DiceBonus.B_PLUS4) {
-        bonus += 4;
+    if (dice[0].bonus === DiceBonus.B_PLUS1) {
+        bonus += 1;
     }
     for (let i = 0; i < dice.length; i++) {
         switch (dice[i].bonus) {
@@ -149,7 +168,7 @@ function chunkArray<T>(arr: T[], columns: number) {
     if (length < 3) {
       return null;
     }
-    const baseScore = length - 3 + fib(length-2) * 3;
+    const baseScore = getBaseScore(length);
     // return Math.round((baseScore + bonus) * multiplier - penalty);
     return {baseScore, bonus, multiplier, penalty};
 }
@@ -259,7 +278,7 @@ function Board(props: {
 
     const intervalRef = useRef(0);
 
-    let requiredScore = OVERRIDE_SCORE || 30 + props.level * 5 + Math.round(15*Math.log(props.level));
+    let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.level);
     const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 

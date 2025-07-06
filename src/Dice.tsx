@@ -3,7 +3,7 @@
 export enum DiceBonus {
     B_15X = '1.5x',
     B_2X = '2x',
-    B_PLUS4 = '+4 starter',
+    B_PLUS1 = '+1 starter',
     B_2_REROLL = '+2 rerolls',
     B_1_REROLL = '+1 reroll',
     B_ALPHABET = 'alphabet',
@@ -64,9 +64,9 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['a/b', 'e/f', 'h/i', 'o/k', 'u/y', 'a/y'], bonus: DiceBonus.B_1_REROLL },
     { faces: ['i', 'i', 'f', 'y', 'g', 'l'], bonus: DiceBonus.B_2_REROLL },
     { faces: ['p', 's', 't', 'c', 'e', 'm'], bonus: DiceBonus.B_2_REROLL },
-    { faces: ['h', 'm', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS4 },
-    { faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS4 },
-    { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS4 },
+    { faces: ['h', 'm', 'r', 'l', 'd', 'o'], bonus: DiceBonus.B_PLUS1 },
+    { faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS1 },
+    { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS1 },
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
 
@@ -93,8 +93,8 @@ export function getSquareBonusDisplay(die: TDie): string {
             return '2x';
         case DiceBonus.B_15X:
             return '1.5x';
-        case DiceBonus.B_PLUS4:
-            return '+5 starter';
+        case DiceBonus.B_PLUS1:
+            return '+1 starter';
         case DiceBonus.B_1_REROLL:
         case DiceBonus.B_2_REROLL:
             return '';
@@ -121,8 +121,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: '2x', description: '2x word score' };
         case DiceBonus.B_15X:
             return { title: '1.5x', description: '1.5x word score' };
-        case DiceBonus.B_PLUS4:
-            return { title: '+4 starter', description: '+4 points for words starting with this die' };
+        case DiceBonus.B_PLUS1:
+            return { title: '+1 starter', description: '+1 point for words starting with this die' };
         case DiceBonus.B_1_REROLL:
             return { title: '+1 reroll charge', desc: DieDescription.REROLL_CHARGE };
         case DiceBonus.B_2_REROLL:
