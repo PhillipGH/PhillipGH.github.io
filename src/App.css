@@ -37,8 +37,12 @@
   position: relative;
   transform: translate3d(0px, 0, 28px);
   color: var(--color-text);
+  transition: transform 0.05s ease-in-out;
 }
 
+.selectedLetter {
+  transform: scale(1.05);
+}
 .nextLetter {
   border-radius: 8px;
   width: 50px;

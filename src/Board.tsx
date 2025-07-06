@@ -254,7 +254,21 @@ function Board(props: {
 
     function reroll() {
       const columns = props.inputDice.length < 21 ? 4 : 5;
-      setDice(chunkArray(rollBoard(props.inputDice), columns));
+      const dice = rollBoard(props.inputDice);
+      setDice(chunkArray(dice, columns));
+
+      // search for on reroll effects:
+      for (let i = 0; i < dice.length; i++) {
+        switch (dice[i].bonus) {
+          case DiceBonus.B_XREROLL:
+            if (dice[i].letter === "x" || dice[i].letter === "z") {
+              props.setRerollCounter((props.rerollCounter || 0) + 1);
+              // TODO add animation
+            }
+              
+            break;
+        }
+      }
     }
     useEffect(() => {
       reroll();
@@ -554,8 +568,10 @@ function Board(props: {
           }
           props.stats.nLetterWords[word.length]++;
 
-          if (word.length > props.stats.longestWord.length)
-            props.stats.longestWord = word;
+          if (word.length > props.stats.longestWords[0].length)
+            props.stats.longestWords = [word];
+          else if (word.length === props.stats.longestWords[0].length)
+            props.stats.longestWords.push(word);
           if (scoreChange > props.stats.highestWordScore) {
             props.stats.highestWordScore = scoreChange;
             props.stats.highestWordScoreWord = word;

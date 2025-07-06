@@ -38,6 +38,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     j: number,
     die: TDie | null,
     isRotating: boolean,
+    isSelected: boolean,
     onEnter: (d: TDie) => void,
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
     getSquares: () => (null|HTMLDivElement)[][]
@@ -105,7 +106,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       }}
       style={{left: x, top: y}}
       className={c}>
-      <div className={'letter'} onPointerDown={(e) => props.onClick(e, die)}>
+      <div className={props.isSelected ? 'letter selectedLetter' :'letter'} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
           onPointerEnter={() => props.onEnter(die)}>
@@ -279,6 +280,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   die={d.d}
                   key={d.d?.id != null ? d.d?.id : -d.tmp}
                   isRotating={props.isRotating}
+                  isSelected={d.d != null && props.currentWord.includes(d.d)}
                   onClick={onClick}
                   onEnter={onEnter}
                   getSquares={getSquares}

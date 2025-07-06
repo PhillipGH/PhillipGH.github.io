@@ -9,7 +9,7 @@ import GameStatsView, { TGameStats } from './GameStats';
 
 // import Cookies from 'js-cookie';
 
-const VERSION = 'v0.1.1.8';
+const VERSION = 'v0.1.1.9';
 
 function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();
@@ -43,7 +43,7 @@ function Game(props: {dictionary: Set<string>}) {
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
   const [stats, setStats] = useState<TGameStats>({
     totalWords: 0,
-    longestWord: '',
+    longestWords: [''],
     highestWordScoreWord: '',
     highestWordScore: 0,
     currentLevel: 0,

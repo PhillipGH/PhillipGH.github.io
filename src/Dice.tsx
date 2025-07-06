@@ -13,6 +13,7 @@ export enum DiceBonus {
     B_ROTATE = 'rotate',
     B_SWAP = 'swap',
     B_4X = '',
+    B_XREROLL = '+1 reroll on x or z',
 }
 
 export enum DieDescription {
@@ -69,6 +70,7 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS1 },
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
+    { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
 
 ].map(d => ({ letter: d.faces[0], ...d }));
 
@@ -97,6 +99,7 @@ export function getSquareBonusDisplay(die: TDie): string {
             return '+1 starter';
         case DiceBonus.B_1_REROLL:
         case DiceBonus.B_2_REROLL:
+        case DiceBonus.B_XREROLL:
             return '';
         case DiceBonus.B_ALPHABET:
             return '1.5x  ' + die.letter + '→' + nextAlphabetLetter(die.letter);
@@ -127,6 +130,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: '+1 reroll charge', desc: DieDescription.REROLL_CHARGE };
         case DiceBonus.B_2_REROLL:
             return { title: '+2 reroll charges', desc: DieDescription.REROLL_CHARGE };
+        case DiceBonus.B_XREROLL:
+            return { title: 'On board reroll, +1 reroll charge if this lands on x or z', desc: DieDescription.REROLL_CHARGE };
         case DiceBonus.B_ALPHABET:
             return { title: '1.5x and a → b', description: '1.5x word score and changes to the next letter in the alphabet.', hasSideEffect: true };
         case DiceBonus.B_MULTIPLIER_COUNTER:

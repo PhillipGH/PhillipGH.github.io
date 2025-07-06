@@ -4,7 +4,7 @@ import { DiceList } from "./RewardsPhase";
 
 export type TGameStats = {
     totalWords: number,
-    longestWord: string,
+    longestWords: string[],
     highestWordScoreWord: string,
     highestWordScore: number,
     currentLevel: number,
@@ -44,8 +44,8 @@ function GameStatsView(props: {
                 <td>{props.stats.currentLevelScore} / {props.stats.currentLevelRequiredScore}</td>
             </tr>
             <tr>
-                <td>Longest Word</td>
-                <td>{props.stats.longestWord.toUpperCase()}</td>
+                <td>Longest Word{props.stats.longestWords.length > 1 && 's'}</td>
+                <td>{props.stats.longestWords.join(', ').toUpperCase()}</td>
             </tr>
             <tr>
                 <td>Highest Scoring Word</td>
