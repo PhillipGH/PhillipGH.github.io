@@ -676,14 +676,14 @@ function Board(props: {
       
     }}>Rotate</button>;
 
-    const pauseButton = <button onClick={handlePause}>Pause</button>;
+    const pauseButton = <button onClick={handlePause}>⏸️</button>;
   
  
     let rerollButton : null | React.JSX.Element = null;
     if  (props.rerollCounter !== null) {
       rerollButton = <button disabled={props.rerollCounter <= 0} onClick={() => {
         useRerollCharge();
-      }}>Reroll +30s ({props.rerollCounter})</button>;
+      }}>Reroll ({props.rerollCounter})</button>;
     }
     return <div>
       <div className="buttons">{rerollButton}{rotateButton}{pauseButton}</div>

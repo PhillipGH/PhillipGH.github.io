@@ -9,7 +9,7 @@ import GameStatsView, { TGameStats } from './GameStats';
 
 // import Cookies from 'js-cookie';
 
-const VERSION = 'v0.1.1.9';
+const VERSION = 'v0.1.1.10';
 
 function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();
