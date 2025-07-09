@@ -70,7 +70,7 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS1 },
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
-    { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
+    { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL }, //{ faces: ['x', 'z', 'x', 'z', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
 
 ].map(d => ({ letter: d.faces[0], ...d }));
 
@@ -87,7 +87,7 @@ export const RARE_DICE: TDie[] = [
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
-// STARTER_DICE.push(ADDITIONAL_DICE[17]);
+// STARTER_DICE.push(BASIC_DICE[11]);
 
 export function getSquareBonusDisplay(die: TDie): string {
     switch (die.bonus) {

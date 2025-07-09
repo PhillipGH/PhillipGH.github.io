@@ -81,6 +81,7 @@ button:focus-visible {
       --background-color: white;
       --background-color-trans: rgba(255,255,255,0.5);
       --color-blue: blue;
+      --color-blue-highlight: rgb(0, 94, 255);
   }
 }
 
@@ -91,5 +92,6 @@ button:focus-visible {
     --background-color: rgb(26, 26, 26);
     --background-color-trans: rgba(0,0,0,0.5);
     --color-blue: rgb(158, 158, 255);
+    --color-blue-highlight: rgb(190, 190, 252);
   }
 }

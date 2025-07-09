@@ -5,6 +5,8 @@ import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 
+type TEvent = { die?: TDie, timing: number};
+
 // missing words: natal
 // fake words: ted, tho, lite
 
@@ -73,7 +75,7 @@ function chunkArray<T>(arr: T[], columns: number) {
   return result;
 }
 
-  function shuffle<T>(array: T[]) {
+  export function shuffle<T>(array: T[]) {
     let currentIndex = array.length;
   
     // While there remain elements to shuffle...
@@ -242,7 +244,7 @@ function Board(props: {
     onWin: () => void,
     onLose: () => void,
     rerollCounter: number | null,
-    setRerollCounter: (n: number|null) => void,
+    setRerollCounter: React.Dispatch<React.SetStateAction<number | null>>,
     stats: TGameStats,
     setStats: (n: TGameStats) => void
   }) {
@@ -253,26 +255,62 @@ function Board(props: {
     }
 
     function reroll() {
+      clearTimeout(eventTimeoutRef.current);
+      handleStop();
       const columns = props.inputDice.length < 21 ? 4 : 5;
       const dice = rollBoard(props.inputDice);
       setDice(chunkArray(dice, columns));
 
       // search for on reroll effects:
+      let events: TEvent[] = [];
       for (let i = 0; i < dice.length; i++) {
         switch (dice[i].bonus) {
           case DiceBonus.B_XREROLL:
             if (dice[i].letter === "x" || dice[i].letter === "z") {
-              props.setRerollCounter((props.rerollCounter || 0) + 1);
-              // TODO add animation
+              events.push({die: dice[i], timing: 500})
             }
-              
             break;
         }
       }
+      setEventsQueue(events);
+
+      function processEvent() {
+        if (events.length === 0) {
+          handleStart();
+          return;
+        }
+        const event = events[0];
+        const bonusText: {die: TDie, str: string}[] = [];
+        switch (event?.die?.bonus) {
+          case DiceBonus.B_XREROLL:
+            props.setRerollCounter(c => (c || 0) + 1);
+            bonusText.push({die: event.die, str: '+1 Reroll'});
+            break;
+        }
+        events = events.slice(1,events.length);
+        setEventsQueue(events);
+        setBonusText(bonusText);
+        console.log(bonusText);
+
+        eventTimeoutRef.current = setTimeout(() => {
+          processEvent();
+      }, event.timing);
+      }
+      
+      eventTimeoutRef.current = setTimeout(() => {
+        processEvent();
+      }, 1000);
     }
     useEffect(() => {
       reroll();
-      return () => clearTimeout(timeoutRef.current);
+    }, []);
+
+    useEffect(() => {
+      return () => {
+        clearTimeout(timeoutRef.current);
+        clearTimeout(eventTimeoutRef.current);
+        clearInterval(intervalRef.current);
+      } 
     }, []);
     const [dice, setDice] = useState<(TDie | null)[][]>([]);
     const [currentWord, setCurrentWord] = useState<TDie[]>([]);
@@ -280,6 +318,7 @@ function Board(props: {
     const [score, setScore] = useState<number>(0);
     const [isRotating, setIsRotating] = useState(false);
     const timeoutRef = useRef(0);
+    const eventTimeoutRef = useRef(0);
     const [timeBonus, setTimeBonus] = useState(0);
   
     const [usedWords, setUsedWords] = useState(new Set<string>());
@@ -289,6 +328,10 @@ function Board(props: {
     const [now, setNow] = useState(0);
     const [totalTimeSinceStart, setTotalTimeSinceStart] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [eventsQueue, setEventsQueue] = useState<TEvent[]>([]);
+    const [bonusText, setBonusText] = useState<{die: TDie, str: string}[]>([]);
+
+    const isInEvent = eventsQueue.length > 0;
 
     const intervalRef = useRef(0);
 
@@ -600,27 +643,28 @@ function Board(props: {
     }
 
     function handlePause() {
-      if (isPaused)
+      if (isPaused || isInEvent)
         return;
-      clearInterval(intervalRef.current);
+      handleStop();
       setIsPaused(true);
+    }
+
+    // pausing and reroll animations
+    function handleStop() {
+      clearInterval(intervalRef.current);
       setNow(Date.now());
       setStartTime(Date.now());
-      setTotalTimeSinceStart(totalTimeSinceStart + Date.now() - startTime);
+      if (startTime > 0)
+        setTotalTimeSinceStart(totalTimeSinceStart + Date.now() - startTime);
     }
-    
-    useEffect(() => {
-      handleStart();
-      return () => {
-        clearInterval(intervalRef.current);
-      };
-    }, []);
 
     let secondsPassed = (now - startTime + totalTimeSinceStart) / 1000;
     let secondsLeft = Math.floor(TimeLimit + timeBonus - secondsPassed);
     let minutes = Math.floor(secondsLeft / 60);
     let seconds = secondsLeft % 60;
 
+
+    // todo: it would be more react-style to not useEffect for this (https://react.dev/learn/you-might-not-need-an-effect)
     useEffect(() => {
       if (secondsLeft < 0) {
         if ((props.rerollCounter || 0) > 0) {
@@ -676,12 +720,12 @@ function Board(props: {
       
     }}>Rotate</button>;
 
-    const pauseButton = <button onClick={handlePause}>⏸️</button>;
+    const pauseButton = <button onClick={handlePause} disabled={isPaused || isInEvent}>⏸️</button>;
   
  
     let rerollButton : null | React.JSX.Element = null;
     if  (props.rerollCounter !== null) {
-      rerollButton = <button disabled={props.rerollCounter <= 0} onClick={() => {
+      rerollButton = <button disabled={props.rerollCounter <= 0 || isPaused || isInEvent} onClick={() => {
         useRerollCharge();
       }}>Reroll ({props.rerollCounter})</button>;
     }
@@ -695,7 +739,7 @@ function Board(props: {
       </div>
       <DisplayWord lastWord={lastWord} currentWord={currentWord}/>
       <div className='container'>
-        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} />
+        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} bonusText={bonusText}/>
       </div>
       {overlay}
     </div>;

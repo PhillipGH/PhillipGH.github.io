@@ -37,11 +37,13 @@
   position: relative;
   transform: translate3d(0px, 0, 28px);
   color: var(--color-text);
-  transition: transform 0.05s ease-in-out;
+  transition: transform 0.05s ease-in-out, border 0.05s ease-in-out;
 }
 
 .selectedLetter {
   transform: scale(1.05);
+  border: 1px solid var(--color-blue-highlight);
+
 }
 .nextLetter {
   border-radius: 8px;
@@ -83,6 +85,8 @@
 .rolling {
   transform-style: preserve-3d;
   animation: letterTransition 0.2s linear;
+  /* animation: letterTransition 2s linear;  */
+  animation-fill-mode: forwards;
 }
 
 @keyframes letterTransition {
@@ -262,6 +266,22 @@
 
 .line {
   border-radius: 10px
+}
+
+.bonusText {
+  animation-fill-mode: forwards;
+  position: absolute;
+  color: blueviolet;
+  width: 100px;
+  animation: bonus-animation 1s ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes bonus-animation {
+100% {
+  transform: translateY(-50px);
+  opacity: 0%;
+  }
 }
 
 .fadeOut {

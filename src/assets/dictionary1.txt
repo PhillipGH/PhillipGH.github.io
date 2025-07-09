@@ -23933,6 +23933,8 @@ geocached
 geocaches
 geocaching
 geocentric
+geode
+geodes
 geoengineering
 geographer
 geographers
