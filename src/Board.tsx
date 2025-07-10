@@ -258,17 +258,35 @@ function Board(props: {
       clearTimeout(eventTimeoutRef.current);
       handleStop();
       const columns = props.inputDice.length < 21 ? 4 : 5;
-      const dice = rollBoard(props.inputDice);
-      setDice(chunkArray(dice, columns));
+      const diceOrdered = rollBoard(props.inputDice);
+      const diceChunked = chunkArray(diceOrdered, columns)
+      setDice(diceChunked);
+
+      let corners = [
+        [0,0],
+        [diceChunked.length -1, 0],
+        [diceChunked.length -1, diceChunked[0].length - 1],
+        [0, diceChunked[0].length - 1],
+      ];
+
+      corners = corners.map(p => {
+        if (diceChunked[p[0]][p[1]] == null)
+          return [p[0] === 0 ? p[0] + 1 : p[0] - 1, p[1]];
+        else return p;
+      });
+      shuffle(corners);
 
       // search for on reroll effects:
       let events: TEvent[] = [];
-      for (let i = 0; i < dice.length; i++) {
-        switch (dice[i].bonus) {
+      for (let i = 0; i < diceOrdered.length; i++) {
+        switch (diceOrdered[i].bonus) {
           case DiceBonus.B_XREROLL:
-            if (dice[i].letter === "x" || dice[i].letter === "z") {
-              events.push({die: dice[i], timing: 500})
+            if (diceOrdered[i].letter === "x" || diceOrdered[i].letter === "z") {
+              events.push({die: diceOrdered[i], timing: 500})
             }
+            break;
+          case DiceBonus.B_CORNER_SWAP:
+            events.push({die: diceOrdered[i], timing: 500})
             break;
         }
       }
@@ -286,11 +304,24 @@ function Board(props: {
             props.setRerollCounter(c => (c || 0) + 1);
             bonusText.push({die: event.die, str: '+1 Reroll'});
             break;
+          case DiceBonus.B_CORNER_SWAP:
+            if (corners.length === 0) break;
+            bonusText.push({die: event.die, str: 'Corner'});
+            const [x1, y1] = getDiceCoord(event?.die, diceChunked);
+            if (corners.find(p => p[0] === x1 && p[1] === y1))
+              break;
+            
+            const c = corners.pop();
+            if (!c) break;
+            let temp = diceChunked[x1][y1];
+            diceChunked[x1][y1] = diceChunked[c[0]][c[1]];
+            diceChunked[c[0]][c[1]] = temp;
+            setDice([...diceChunked]);
+            break;
         }
         events = events.slice(1,events.length);
         setEventsQueue(events);
         setBonusText(bonusText);
-        console.log(bonusText);
 
         eventTimeoutRef.current = setTimeout(() => {
           processEvent();
@@ -414,10 +445,11 @@ function Board(props: {
     return usedWord;
   }
 
-  function getDiceCoord(die: TDie): [number, number] {
-    for (let i = 0; i < dice.length; i++) {
-      for (let j = 0; j < dice[i].length; j++) {
-        if (dice[i][j] === die) {
+  function getDiceCoord(die: TDie, diceArray?: (TDie | null)[][]): [number, number] {
+    const d = diceArray || dice;
+    for (let i = 0; i < d.length; i++) {
+      for (let j = 0; j < d[i].length; j++) {
+        if (d[i][j] === die) {
           return [i, j];
         }
       }
@@ -448,6 +480,7 @@ function Board(props: {
           break;
         case DiceBonus.B_SWAP:
           swapDice++; // could instead unswap?
+          bonusText.push({die: die, str: '+5 seconds'});
           break;
       }
     }
@@ -578,6 +611,7 @@ function Board(props: {
       }
       setDice([...dice]);
     }
+    setBonusText(bonusText);
   }
 
   function commitWord() {

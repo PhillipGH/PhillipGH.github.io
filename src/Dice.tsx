@@ -14,6 +14,7 @@ export enum DiceBonus {
     B_SWAP = 'swap',
     B_4X = '',
     B_XREROLL = '+1 reroll on x or z',
+    B_CORNER_SWAP = 'corner',
 }
 
 export enum DieDescription {
@@ -71,6 +72,7 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
     { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL }, //{ faces: ['x', 'z', 'x', 'z', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
+    { faces: ['c', 'o', 'r', 'n', 'e', 'r'], bonus: DiceBonus.B_CORNER_SWAP },
 
 ].map(d => ({ letter: d.faces[0], ...d }));
 
@@ -79,6 +81,7 @@ export const RARE_DICE: TDie[] = [
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
     { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS3, desc: DieDescription.ASTERIX },
+    { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_CORNER_SWAP, desc: DieDescription.ASTERIX },
     { faces: [DEL, DEL, DEL, DEL, DEL, DEL], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
@@ -144,6 +147,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: '🔃 rotate dice', description: 'when used, rotates all the dice surrounding this one clockwise one position', hasSideEffect: true };
         case DiceBonus.B_SWAP:
             return { title: 'swap dice', description: 'When used in a word, swaps the position of the first and last letter of the word and +5 seconds of time', hasSideEffect: true };
+        case DiceBonus.B_CORNER_SWAP:
+            return { title: 'corner swap', description: 'On reroll, wants to be in the corner of the board'};
         default:
             throw new Error('unknown bonus type');
     }
