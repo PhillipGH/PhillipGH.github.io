@@ -86,7 +86,6 @@ export const RARE_DICE: TDie[] = [
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
     { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS1, desc: DieDescription.ASTERIX },
-    { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_CORNER_SWAP, desc: DieDescription.ASTERIX },
     { faces: [DEL, DEL, DEL, DEL, DEL, DEL], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },

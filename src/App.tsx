@@ -5,11 +5,11 @@ import React from 'react';
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
-import GameStatsView, { TGameStats } from './GameStats';
+import {GameStatsView, TGameStats } from './GameStats';
 
 // import Cookies from 'js-cookie';
 
-const VERSION = 'v0.1.1.12';
+const VERSION = 'v0.1.1.13';
 
 function loadDictionary(dictionaryRaw: string) {
   let dictionary = new Set<string>();
@@ -134,7 +134,7 @@ function Game(props: {dictionary: Set<string>}) {
     }}/>;
     viewButton = <button id='viewDice' className={dieRecieved ? 'gainDie' : ''} onClick={() => {setPhase('view_dice')}}>Dice ({dice.length})</button>
   } else if (phase === 'view_dice') {
-    content = <DiceView dice={dice}/>;
+    content = <DiceView dice={dice} stats={stats}/>;
     viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>
   } else if (phase === 'stats') {
     content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;

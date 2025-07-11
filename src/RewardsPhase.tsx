@@ -2,6 +2,7 @@ import {useRef, useState } from 'react'
 import './App.css'
 import { getDiceBonusText, getDieDesc, TDie } from './Dice';
 import React from 'react';
+import {GameStats, TGameStats } from './GameStats';
 
 function Die(props: { die: TDie, chosen?: boolean}) {
     const selfRef = useRef<null|HTMLDivElement>(null);
@@ -49,7 +50,7 @@ export function DiceList(props: { dice: TDie[] }) {
     });
 }
 
-export function DiceView(props: { dice: TDie[] }) {
+export function DiceView(props: {stats: TGameStats, dice: TDie[] }) {
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
     const letters = alphabet.map(letter => {
         let count = 0;
@@ -66,6 +67,8 @@ export function DiceView(props: { dice: TDie[] }) {
     
 
     return <div id="rewardsPhase">
+        <h2>Stats:</h2>
+        <GameStats stats={props.stats} />
         <h2>Letter Breakdown:</h2>
         <table id='letterTable'><tbody>
             <tr>
