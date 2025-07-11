@@ -1,7 +1,7 @@
 import {PointerEvent, useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { DiceBonus, getDiceBonusText, getSquareBonusDisplay, TDie } from './Dice';
+import { DiceBonus, getDiceBonusText, getSquareBonusDisplay, TDie, TGameContext } from './Dice';
 import { shuffle } from './Board';
 
 const SPACING = 60;
@@ -44,6 +44,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
     getSquares: () => (null|HTMLDivElement)[][],
     bonusText: string | null,
+    gameContext: TGameContext,
   }) {
     function getInitialLetter(): string {
       if (!props.die) return '';
@@ -147,14 +148,14 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
           onPointerEnter={() => props.onEnter(die)}>
             <p className={letterClass}>{displayLetter.toUpperCase()}</p>
         </div>
-        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
+        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die, props.gameContext)}</p>: null}
       </div>
       {isRolling? <div className={'nextLetter'}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}>
             <p className={letterClass}>{nextLetter.toUpperCase()}</p>
         </div>
-        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die)}</p>: null}
+        {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die, props.gameContext)}</p>: null}
       </div>
        : null}
 
@@ -228,7 +229,8 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     dice: (TDie | null)[][],
     currentWord: TDie[],
     isRotating: boolean,
-    bonusText: {die: TDie, str: string}[]
+    bonusText: {die: TDie, str: string}[],
+    gameContext: TGameContext,
     setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
     commitWord: () => void,
   } ) {
@@ -326,6 +328,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   onEnter={onEnter}
                   getSquares={getSquares}
                   bonusText={d.bonusText}
+                  gameContext={props.gameContext}
                 />
             )}
       <div style={{display : props.isRotating ? "none" : ""}}>

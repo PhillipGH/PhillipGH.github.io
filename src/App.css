@@ -275,6 +275,7 @@
   width: 100px;
   animation: bonus-animation 1s ease-out;
   animation-fill-mode: forwards;
+  pointer-events: none;
 }
 
 @keyframes bonus-animation {

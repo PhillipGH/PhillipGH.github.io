@@ -22,7 +22,7 @@ const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 // }
 
 // for (let i = 1; i <= 15; i++) {
-//   console.log(i, getRequiredScore(i), 7 + i * 2 + Math.round(4*Math.log(i)));
+//   console.log(i, getRequiredScore(i), 5 + i * 3 + Math.round(4*Math.log(i)));
 // }
 
 // function fib(n: number): number {
@@ -38,7 +38,7 @@ function getBaseScore(n: number): number {
 }
 
 function getRequiredScore(level: number): number {
-  return 7 + level * 2 + Math.round(4*Math.log(level));
+  return 5 + level * 3 + Math.round(4*Math.log(level));
 }
 
 const ROTATION_COORDS: [number, number][] = [
@@ -127,35 +127,10 @@ function chunkArray<T>(arr: T[], columns: number) {
     return tokens;
   }
 
-  function scoreWord(word: string, dice: TDie[]) {
+  function scoreWord(word: string, dice: TDie[], currentLevel: number) {
     let multiplier = 1;
     let bonus = 0;
     let penalty = 0;
-    if (dice[0].bonus === DiceBonus.B_PLUS1) {
-        bonus += 1;
-    }
-    for (let i = 0; i < dice.length; i++) {
-        switch (dice[i].bonus) {
-            case DiceBonus.B_2X:
-                multiplier *= 2;
-                break;
-            case DiceBonus.B_15X:
-                multiplier *= 1.5;
-                break;
-            case DiceBonus.B_ALPHABET:
-                multiplier *= 1.5;
-                break;
-            case DiceBonus.B_MULTIPLIER_COUNTER:
-                multiplier *= (dice[i].counter || 1);
-                break;
-            case DiceBonus.B_MINUS3:
-                penalty += 3;
-                break;
-            case DiceBonus.B_REROLL_WORD:
-              penalty += 3;
-              break;
-        }
-    }
 
     const tokens = tokenizeWord(word);
     let length = tokens.length;
@@ -170,6 +145,37 @@ function chunkArray<T>(arr: T[], columns: number) {
     if (length < 3) {
       return null;
     }
+
+        if (dice[0].bonus === DiceBonus.B_PLUS1) {
+        bonus += 1;
+    }
+
+    for (let i = 0; i < dice.length; i++) {
+        switch (dice[i].bonus) {
+            case DiceBonus.B_2X:
+                multiplier *= 2;
+                break;
+            case DiceBonus.B_15X:
+                multiplier *= 1.5;
+                break;
+            case DiceBonus.B_ALPHABET:
+                multiplier *= 1.5;
+                break;
+            case DiceBonus.B_MULTIPLIER_COUNTER:
+                multiplier *= (dice[i].counter || 1);
+                break;
+            case DiceBonus.B_MINUS1:
+                penalty += 1;
+                break;
+            case DiceBonus.B_REROLL_WORD:
+              penalty += 2;
+              break;
+            case DiceBonus.B_PLUS_LEVEL:
+              if (length > currentLevel)
+                bonus += currentLevel;
+              break;
+        }
+    }
     const baseScore = getBaseScore(length);
     // return Math.round((baseScore + bonus) * multiplier - penalty);
     return {baseScore, bonus, multiplier, penalty};
@@ -180,13 +186,14 @@ type TLastWord = {word: string, score?: number, invalidReason?: string | null};
 function DisplayWord(props: {
   currentWord: TDie[],
   lastWord: TLastWord,
+  currentLevel: number,
 }) {
   let word : JSX.Element | null = null;
   let suffix : JSX.Element | null = null;
   if (props.currentWord.length > 0) {
     let w = props.currentWord.map(d => d.letter).join('');
     const tokens = tokenizeWord(w);
-    const s = scoreWord(w, props.currentWord);
+    const s = scoreWord(w, props.currentWord, props.currentLevel);
     w = '';
     let delCounter = 0;
     for (let i = 0; i < tokens.length; i++) {
@@ -367,7 +374,7 @@ function Board(props: {
     const intervalRef = useRef(0);
 
     let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.level);
-    const TimeLimit = OVERRIDE_TIME || 105 + props.level * 5;
+    const TimeLimit = OVERRIDE_TIME || 95 + props.level * 5;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
   function wordIsInDictionary(word: TDie[]): {die: TDie, contribution: string}[] | null {
@@ -631,7 +638,7 @@ function Board(props: {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
           setUsedWords(new Set(usedWords.add(word)));
-          const s = scoreWord(word, currentWord);
+          const s = scoreWord(word, currentWord, props.level);
           if (s)
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
           setScore(score + scoreChange);
@@ -763,20 +770,49 @@ function Board(props: {
         useRerollCharge();
       }}>Reroll ({props.rerollCounter})</button>;
     }
-    return <div>
-      <div className="buttons">{rerollButton}{rotateButton}{pauseButton}</div>
-            
-      <h1 className="timer" style={{color:'hsl('+ timerHue +', ' + timerSaturation + '%, 50%)'}}>{minutes}:{seconds < 10 ? '0' + seconds : seconds}</h1>
-      <div id="progressbar">
-        <div style={{width: progress + '%'}}></div>
-        <center><label>{score} / {requiredScore}</label></center>
+    return (
+      <div>
+        <div className="buttons">
+          {rerollButton}
+          {rotateButton}
+          {pauseButton}
+        </div>
+
+        <h1
+          className="timer"
+          style={{
+            color: "hsl(" + timerHue + ", " + timerSaturation + "%, 50%)",
+          }}
+        >
+          {minutes}:{seconds < 10 ? "0" + seconds : seconds}
+        </h1>
+        <div id="progressbar">
+          <div style={{ width: progress + "%" }}></div>
+          <center>
+            <label>
+              {score} / {requiredScore}
+            </label>
+          </center>
+        </div>
+        <DisplayWord
+          lastWord={lastWord}
+          currentWord={currentWord}
+          currentLevel={props.level}
+        />
+        <div className="container">
+          <Grid
+            dice={dice}
+            currentWord={currentWord}
+            setCurrentWord={setCurrentWord}
+            commitWord={commitWord}
+            isRotating={isRotating}
+            bonusText={bonusText}
+            gameContext={{ currentLevel: props.level }}
+          />
+        </div>
+        {overlay}
       </div>
-      <DisplayWord lastWord={lastWord} currentWord={currentWord}/>
-      <div className='container'>
-        <Grid dice={dice} currentWord={currentWord} setCurrentWord={setCurrentWord} commitWord={commitWord} isRotating={isRotating} bonusText={bonusText}/>
-      </div>
-      {overlay}
-    </div>;
+    );
   }
 
   export default Board;
