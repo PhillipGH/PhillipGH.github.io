@@ -91,6 +91,10 @@ function chunkArray<T>(arr: T[], columns: number) {
     }
   }
 
+  function spliceNoMutate<T>(myArray: T[], indexToRemove: number) {
+    return myArray.slice(0,indexToRemove).concat(myArray.slice(indexToRemove+1));
+}
+
   function rollBoard(dice: TDie[]) {
     // returns a randomized array of dice
     dice = dice.map(
@@ -377,20 +381,19 @@ function Board(props: {
     const TimeLimit = OVERRIDE_TIME || 95 + props.level * 5;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
-  function wordIsInDictionary(word: TDie[]): {die: TDie, contribution: string}[] | null {
-    const wordMapped = word.map(d => ({die: d, contribution: d.letter}));
-    return wordIsInDictionaryHelper(wordMapped);
+  function wordIsInDictionary(word: TDie[]): {dice: TDie[], contributions: string[]} | null {
+    return wordIsInDictionaryHelper(word, word.map(d => d.letter));
   }
 
-  function wordIsInDictionaryHelper(word: {die: TDie, contribution: string}[], ref = { isUsed: false }): {die: TDie, contribution: string}[] | null {
-    let stringWord = word.map((d) => d.contribution).join("");
+  function wordIsInDictionaryHelper(dice: TDie[], contributions: string[], ref = { isUsed: false }): {dice: TDie[], contributions: string[]} | null {
+    let stringWord = contributions.join("");
     if (ALL_WORDS_VALID || props.dictionary.has(stringWord)) {
-      return word;
+      return {dice, contributions};
     }
     let dieIndex = -1;
     let letterIndex = -1;
-    for (let i = 0; i < word.length; i++) {
-      letterIndex = word[i].contribution.search(/\/|\*|🔙|!/);
+    for (let i = 0; i < contributions.length; i++) {
+      letterIndex = contributions[i].search(/\/|\*|🔙|!/);
       if (letterIndex > -1) {
         dieIndex = i;
         break;
@@ -400,11 +403,15 @@ function Board(props: {
     if (dieIndex < 0) {
       return null;
     }
-    let usedWord: {die: TDie, contribution: string}[] | null = null;
+
+    dice = dice.slice();
+    contributions = contributions.slice();
+
+    let usedWord: {dice: TDie[], contributions: string[]} | null = null;
     let alphabet = ALPHABET;
     let regex = /\*/;
 
-    let dieStr = word[dieIndex].contribution;
+    let dieStr = contributions[dieIndex];
     // if (word[index] === EXCLAIM[0]) {
     //   word = word.replace(EXCLAIM, "");
     //   return wordIsInDictionary(word, ref); } else
@@ -413,16 +420,15 @@ function Board(props: {
       regex = /[a-z]\/[a-z]/;
     } else if (dieStr[letterIndex] === DEL[0]) {
       // remove dieIndex from word
-      word.splice(dieIndex, 1);
+      dice.splice(dieIndex, 1);
+      contributions.splice(dieIndex, 1);
       //const tokens = tokenizeWord(word);
-      for (let i = 0; i < word.length; i++) {
+      for (let i = 0; i < dice.length; i++) {
         // TODO maybe we should make it so deletes can't delete other deletes?
         const ref2 = { isUsed: false };
-        const slicedDice = word.slice();
-        slicedDice.splice(i, 1);
-        let result = wordIsInDictionaryHelper(slicedDice, ref2);
+        let result = wordIsInDictionaryHelper(spliceNoMutate(dice, i), spliceNoMutate(contributions, i), ref2);
         if (result) {
-          if (ref2.isUsed || usedWords.has(result.map((d) => d.contribution).join(""))) {
+          if (ref2.isUsed || usedWords.has(result.contributions.join(""))) {
             ref.isUsed = true;
             usedWord = result;
           } else {
@@ -437,10 +443,11 @@ function Board(props: {
       const ref2 = { isUsed: false };
       // const newWord = word.slice();
       let newString = dieStr.replace(regex, alphabet[i]);
-      word[dieIndex].contribution = newString;
-      let result = wordIsInDictionaryHelper(word, ref2);
+      const contributionsCopy = contributions.slice();
+      contributionsCopy[dieIndex] = newString;
+      let result = wordIsInDictionaryHelper(dice, contributionsCopy, ref2);
       if (result) {
-        if (ref2.isUsed || usedWords.has(result.map((d) => d.contribution).join(""))) {
+        if (ref2.isUsed || usedWords.has(result.contributions.join(""))) {
           ref.isUsed = true;
           usedWord = result;
         } else {
@@ -464,12 +471,12 @@ function Board(props: {
     return [-1, -1];
   }
 
-  function mutateBoard(word: {die: TDie, contribution: string}[]) {
+  function mutateBoard(word: {dice: TDie[], contributions: string[]}) {
     let rerollWord = false;
     const rotationDice: TDie[] = [];
     let swapDice = 0;
-    for (let i = 0; i < word.length; i++) {
-      let die = word[i].die;
+    for (let i = 0; i < word.dice.length; i++) {
+      let die = word.dice[i];
       switch (die.bonus) {
         case DiceBonus.B_ALPHABET:
           die.letter = nextAlphabetLetter(die.letter);
@@ -492,7 +499,7 @@ function Board(props: {
       }
     }
     if (rerollWord) {
-      word.map(die => rerollDie(die.die));
+      word.dice.map(die => rerollDie(die));
       setDice([...dice]);
     }
     if (rotationDice) {
@@ -596,17 +603,17 @@ function Board(props: {
       setDice([...dice]);
     }
     if (swapDice > 0) {
-      const [x1, y1] = getDiceCoord(word[0].die);
-      const [x2, y2] = getDiceCoord(word[word.length - 1].die);
+      const [x1, y1] = getDiceCoord(word.dice[0]);
+      const [x2, y2] = getDiceCoord(word.dice[word.dice.length - 1]);
       let temp = dice[x1][y1];
       dice[x1][y1] = dice[x2][y2];
       dice[x2][y2] = temp;
       setTimeBonus(t => t + 5 * swapDice);
       setDice([...dice]);
     }
-    if (word[word.length -1].die.letter.endsWith(EXCLAIM)) {
-      for (let index = 0; index < word.length; index++) {
-        const die = word[index].die;
+    if (word.dice[word.dice.length -1].letter.endsWith(EXCLAIM)) {
+      for (let index = 0; index < word.dice.length; index++) {
+        const die = word.dice[index];
         const [i, j0] = getDiceCoord(die);
         for (let j = j0; j < dice[0].length; j++) {
           if (j < dice[0].length - 1) {
@@ -630,7 +637,7 @@ function Board(props: {
     }
     const result =  wordIsInDictionary(currentWord);
     if (result) {
-      word = result.map((d) => d.contribution).join("");;
+      word = result.contributions.join("");;
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
       } else {
