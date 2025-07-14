@@ -9,14 +9,27 @@ import {GameStatsView, TGameStats } from './GameStats';
 
 // import Cookies from 'js-cookie';
 
-const VERSION = 'v0.1.1.13';
+const VERSION = 'v0.1.1.14';
 
-function loadDictionary(dictionaryRaw: string) {
+function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
+  const dictionarySorted : string[] = [];
   dictionaryRaw.split('\n').forEach((word) => {
     dictionary.add(word.trim());
+    dictionarySorted.push(word.trim());
   });
-  return dictionary;
+
+  dictionarySorted.every((v: string, i: number, arr: string[]) => {
+    if (!i) return true;
+    if (arr[i-1] > v) {
+      console.log('NOT SORTED!!', arr[i-1], v);
+      return false;
+    }
+
+    return true;
+  });
+  
+  return {dSet: dictionary, dSort: dictionarySorted};
 }
 
 function getNRandom<T>(arr: T[], n: number): T[] {
@@ -33,7 +46,7 @@ function getNRandom<T>(arr: T[], n: number): T[] {
   return result;
 }
 
-function Game(props: {dictionary: Set<string>}) {
+function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
   const [choices, setChoices] = useState<TDie[]>([]);
   const [level, setLevel] = useState<number>(1);
@@ -114,6 +127,7 @@ function Game(props: {dictionary: Set<string>}) {
     <Board
       key={internalCounter}
       dictionary={props.dictionary}
+      dictionarySorted={props.dictionarySorted}
       level={level} onLose={onLose}
       onWin={onWin}
       inputDice={dice.map((d, index) => {return {...d, id: index};})}
@@ -148,9 +162,12 @@ function Game(props: {dictionary: Set<string>}) {
 
 function App() {
   let [dictionary, setDictionary] = useState(new Set<string>());
+  let [dictionarySorted, setDictionarySorted] = useState<string[]>([]);
   useEffect(() => {
     import('./assets/dictionary1.txt?raw').then((dictionaryModule:any) => {
-      setDictionary(loadDictionary(dictionaryModule.default))
+      const dict = loadDictionary(dictionaryModule.default);
+      setDictionary(dict.dSet);
+      setDictionarySorted(dict.dSort);
     });
   }, []);
   if(dictionary.size === 0) {
@@ -159,7 +176,7 @@ function App() {
       </div>;
   }
   return <div className="app">
-    <Game dictionary={dictionary}/>
+    <Game dictionary={dictionary} dictionarySorted={dictionarySorted}/>
   </div>;
 }
 

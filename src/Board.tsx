@@ -4,6 +4,7 @@ import Grid from "./Grid";
 import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
+import { solveForWords } from "./Solver";
 
 type TEvent = { die?: TDie, timing: number};
 
@@ -250,6 +251,7 @@ function DisplayWord(props: {
 
 function Board(props: {
     dictionary: Set<string>,
+    dictionarySorted: string[],
     level: number,
     inputDice: TDie[],
     onWin: () => void,
@@ -305,6 +307,7 @@ function Board(props: {
 
       function processEvent() {
         if (events.length === 0) {
+          recalculateHints(diceChunked);
           handleStart();
           return;
         }
@@ -471,7 +474,36 @@ function Board(props: {
     return [-1, -1];
   }
 
-  function mutateBoard(word: {dice: TDie[], contributions: string[]}) {
+  function recalculateHints(diceArray: (TDie | null)[][], used?: Set<string>) {
+    for (let i = 0; i < diceArray.length; i++) {
+      for (let j = 0; j < diceArray[0].length; j++) {
+        const die = diceArray[i][j];
+        if (!die) continue;
+        switch (die.bonus) {
+          case DiceBonus.B_HINT:
+            const hints = solveForWords(i,j, diceArray, props.dictionary, props.dictionarySorted);
+            let hint: string | null = null;
+            let longest = '';
+            for (const s of hints) {
+              if (used ? used.has(s) : usedWords.has(s)) continue;
+              if (s.length > longest.length) {
+                longest = s;
+              }
+            }
+            if (longest.length > 4) {
+              hint = longest;
+              die.savedStr = hint.substring(0,4);
+            } else {
+              die.savedStr = undefined;
+            }
+            // console.log(hints, hint);
+            break;
+        }
+      }
+    }
+  }
+
+  function mutateBoard(word: {dice: TDie[], contributions: string[]}): (TDie | null)[][] {
     let rerollWord = false;
     const rotationDice: TDie[] = [];
     let swapDice = 0;
@@ -626,12 +658,15 @@ function Board(props: {
       setDice([...dice]);
     }
     setBonusText(bonusText);
+    return dice;
   }
 
   function commitWord() {
     let suffix: string | null = null;
     let scoreChange = 0;
     let word = currentWord.map(d => d.letter).join('');
+    let newUsedWords = usedWords;
+    let newDice = dice;
     if (word.length === 0) {
       return;
     }
@@ -644,7 +679,8 @@ function Board(props: {
         if (usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
-          setUsedWords(new Set(usedWords.add(word)));
+          newUsedWords = new Set(usedWords.add(word));
+          setUsedWords(newUsedWords);
           const s = scoreWord(word, currentWord, props.level);
           if (s)
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
@@ -668,7 +704,7 @@ function Board(props: {
             props.stats.highestWordScoreWord = word;
           }
           props.setStats(props.stats);
-          mutateBoard(result);
+          newDice = mutateBoard(result);
         }
       }
     } else {
@@ -677,6 +713,7 @@ function Board(props: {
     let last = word.toUpperCase();
     setLastWord({ word: last, score: scoreChange, invalidReason: suffix });
     setCurrentWord([]);
+    recalculateHints(newDice, newUsedWords);
   }
 
     // called at start and for unpause

@@ -27896,7 +27896,6 @@ hysteria
 hysterical
 hysterically
 hysterics
-I
 iamb
 iambic
 iambs
@@ -38082,7 +38081,6 @@ nymphomaniac
 nymphomaniacs
 nymphos
 nymphs
-O
 oaf
 oafish
 oafishly
@@ -40451,7 +40449,6 @@ patented
 patenting
 patently
 patents
-pater
 paterfamilias
 paterfamiliases
 paternal
@@ -40461,7 +40458,6 @@ paternalistic
 paternalists
 paternally
 paternity
-paters
 pates
 path
 pathetic
@@ -57311,11 +57307,11 @@ teamwork
 teapot
 teapots
 tear
-teared
 tearaway
 tearaways
 teardrop
 teardrops
+teared
 tearful
 tearfully
 tearfulness

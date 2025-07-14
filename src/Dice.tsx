@@ -16,6 +16,7 @@ export enum DiceBonus {
     B_XREROLL = '+1 reroll on x or z',
     B_CORNER_SWAP = 'corner',
     B_PLUS_LEVEL = '+<level>',
+    B_HINT = 'hint',
 }
 
 export enum DieDescription {
@@ -24,7 +25,7 @@ export enum DieDescription {
     REROLL_CHARGE,
     HEARTS,
 }
-export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, desc?: DieDescription,  id?: number};
+export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, savedStr?: string, desc?: DieDescription,  id?: number};
 export type TGameContext = {currentLevel: number};
 
 export const REROLL_TIME_BONUS = 30;
@@ -34,7 +35,6 @@ export const EXCLAIM  = '!'; // also update the regex in Board.tsx!
 
 const STARTER_DICE_FACES = [
     //'ennnda',
-    'titiei',
     'ipcelt',
     'eeeema',
     'eeeeaa',
@@ -52,6 +52,7 @@ const STARTER_DICE_FACES = [
     'nhdtoh',
     'ouotnw',
     'rddonl',
+    'eiitt',
     //'wnccts',
     //'xzkqjb', 3x
     //'hhrldo', // +2
@@ -90,11 +91,13 @@ export const RARE_DICE: TDie[] = [
     { faces: ['a/e', 'e/i', 'i/o', 'o/u', 'u/y', 'e/o'], bonus: DiceBonus.B_REROLL_WORD },
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
     { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
+    { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
 // STARTER_DICE.push(BASIC_DICE[11]);
+// STARTER_DICE.push(RARE_DICE[8]);
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
     switch (die.bonus) {
@@ -122,6 +125,8 @@ export function getSquareBonusDisplay(die: TDie, context: TGameContext): string 
             return 'swap';
         case DiceBonus.B_PLUS_LEVEL:
             return '+'+ context.currentLevel + ' if > ' + context.currentLevel;
+        case DiceBonus.B_HINT:
+            return 'hint: ' + (die.savedStr || 'n/a');
         default:
             return '';
     }
@@ -157,6 +162,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: 'corner swap', description: 'On reroll, wants to be in the corner of the board'};
         case DiceBonus.B_PLUS_LEVEL:
             return { title: '+<level>', description: '+<level> points if word is longer than <level> letters'};
+        case DiceBonus.B_HINT:
+            return { title: 'hint', description: 'says the first 4 letters of a word of length > 4 starting with this die'};
         default:
             throw new Error('unknown bonus type');
     }
