@@ -272,17 +272,17 @@ function Board(props: {
       handleStop();
       const columns = props.inputDice.length < 21 ? 4 : 5;
       const diceOrdered = rollBoard(props.inputDice);
-      const diceChunked = chunkArray(diceOrdered, columns)
+      const diceChunked = chunkArray(diceOrdered, columns);
       setDice(diceChunked);
 
       let corners = [
-        [0,0],
-        [diceChunked.length -1, 0],
-        [diceChunked.length -1, diceChunked[0].length - 1],
+        [0, 0],
+        [diceChunked.length - 1, 0],
+        [diceChunked.length - 1, diceChunked[0].length - 1],
         [0, diceChunked[0].length - 1],
       ];
 
-      corners = corners.map(p => {
+      corners = corners.map((p) => {
         if (diceChunked[p[0]][p[1]] == null)
           return [p[0] === 0 ? p[0] + 1 : p[0] - 1, p[1]];
         else return p;
@@ -294,12 +294,15 @@ function Board(props: {
       for (let i = 0; i < diceOrdered.length; i++) {
         switch (diceOrdered[i].bonus) {
           case DiceBonus.B_XREROLL:
-            if (diceOrdered[i].letter === "x" || diceOrdered[i].letter === "z") {
-              events.push({die: diceOrdered[i], timing: 500})
+            if (
+              diceOrdered[i].letter === "x" ||
+              diceOrdered[i].letter === "z"
+            ) {
+              events.push({ die: diceOrdered[i], timing: 500 });
             }
             break;
           case DiceBonus.B_CORNER_SWAP:
-            events.push({die: diceOrdered[i], timing: 500})
+            events.push({ die: diceOrdered[i], timing: 500 });
             break;
         }
       }
@@ -312,19 +315,18 @@ function Board(props: {
           return;
         }
         const event = events[0];
-        const bonusText: {die: TDie, str: string}[] = [];
+        const bonusText: { die: TDie; str: string }[] = [];
         switch (event?.die?.bonus) {
           case DiceBonus.B_XREROLL:
-            props.setRerollCounter(c => (c || 0) + 1);
-            bonusText.push({die: event.die, str: '+1 Reroll'});
+            props.setRerollCounter((c) => (c || 0) + 1);
+            bonusText.push({ die: event.die, str: "+1 Reroll" });
             break;
           case DiceBonus.B_CORNER_SWAP:
             if (corners.length === 0) break;
-            bonusText.push({die: event.die, str: 'Corner'});
+            bonusText.push({ die: event.die, str: "Corner" });
             const [x1, y1] = getDiceCoord(event?.die, diceChunked);
-            if (corners.find(p => p[0] === x1 && p[1] === y1))
-              break;
-            
+            if (corners.find((p) => p[0] === x1 && p[1] === y1)) break;
+
             const c = corners.pop();
             if (!c) break;
             let temp = diceChunked[x1][y1];
@@ -333,18 +335,21 @@ function Board(props: {
             setDice([...diceChunked]);
             break;
         }
-        events = events.slice(1,events.length);
+        events = events.slice(1, events.length);
         setEventsQueue(events);
         setBonusText(bonusText);
 
         eventTimeoutRef.current = setTimeout(() => {
           processEvent();
-      }, event.timing);
+        }, event.timing);
       }
-      
       eventTimeoutRef.current = setTimeout(() => {
-        processEvent();
-      }, 1000);
+        setIsDealing(false);
+        eventTimeoutRef.current = setTimeout(() => {
+          setIsDealing(false);
+          processEvent();
+        }, 1000);
+      }, 20);
     }
     useEffect(() => {
       reroll();
@@ -362,6 +367,8 @@ function Board(props: {
     const [lastWord, setLastWord] = useState<TLastWord>({word: ''});
     const [score, setScore] = useState<number>(0);
     const [isRotating, setIsRotating] = useState(false);
+    const [isDealing, setIsDealing] = useState(true);
+    
     const timeoutRef = useRef(0);
     const eventTimeoutRef = useRef(0);
     const [timeBonus, setTimeBonus] = useState(0);
@@ -852,6 +859,7 @@ function Board(props: {
             isRotating={isRotating}
             bonusText={bonusText}
             gameContext={{ currentLevel: props.level }}
+            isDealing={isDealing}
           />
         </div>
         {overlay}

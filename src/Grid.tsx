@@ -40,6 +40,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     die: TDie | null,
     isRotating: boolean,
     isSelected: boolean,
+    isDealing: boolean,
     onEnter: (d: TDie) => void,
     onClick: (e: PointerEvent<HTMLDivElement>, d: TDie) => void
     getSquares: () => (null|HTMLDivElement)[][],
@@ -127,6 +128,11 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
     if (isRolling) {
       c += ' rolling';
+    }
+
+    if (props.isDealing) {
+      x = 4 * SPACING;
+      y = -2.3 * SPACING;
     }
 
     return (
@@ -229,6 +235,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     dice: (TDie | null)[][],
     currentWord: TDie[],
     isRotating: boolean,
+    isDealing: boolean,
     bonusText: {die: TDie, str: string}[],
     gameContext: TGameContext,
     setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
@@ -324,6 +331,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
                   key={d.d?.id != null ? d.d?.id : -d.tmp}
                   isRotating={props.isRotating}
                   isSelected={d.d != null && props.currentWord.includes(d.d)}
+                  isDealing={props.isDealing}
                   onClick={onClick}
                   onEnter={onEnter}
                   getSquares={getSquares}
