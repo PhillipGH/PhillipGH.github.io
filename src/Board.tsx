@@ -5,6 +5,7 @@ import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 import { solveForWords } from "./Solver";
+import {getDataFromSaveState } from "./App";
 
 type TEvent = { die?: TDie, timing: number};
 
@@ -250,18 +251,20 @@ function DisplayWord(props: {
 }
 
 function Board(props: {
-    dictionary: Set<string>,
-    dictionarySorted: string[],
-    level: number,
-    inputDice: TDie[],
-    onWin: () => void,
-    onLose: () => void,
-    rerollCounter: number | null,
-    setRerollCounter: React.Dispatch<React.SetStateAction<number | null>>,
-    stats: TGameStats,
-    setStats: (n: TGameStats) => void
-  }) {
-    function useRerollCharge() {
+  dictionary: Set<string>,
+  dictionarySorted: string[],
+  level: number,
+  inputDice: TDie[],
+  onWin: () => void,
+  onLose: () => void,
+  rerollCounter: number | null,
+  setRerollCounter: React.Dispatch<React.SetStateAction<number | null>>,
+  stats: TGameStats,
+  setStats: (n: TGameStats) => void,
+  setSaveData: (score: number, timeSinceStart: number, usedWords: Set<string>, board: (TDie | null)[][]) => void,
+}) {
+
+  function useRerollCharge() {
       setTimeBonus(timeBonus + REROLL_TIME_BONUS);
       props.setRerollCounter((props.rerollCounter || 1) - 1);
       reroll();
@@ -352,7 +355,18 @@ function Board(props: {
       }, 20);
     }
     useEffect(() => {
-      reroll();
+      // if we have a cookie, use it, else reroll
+      const data = getDataFromSaveState();
+      if (data && data.level === props.level && data.board?.length) {
+        setTotalTimeSinceStart(data.timeSinceStart);
+        setScore(data.score);
+        setUsedWords(new Set(data.usedWords));
+        setDice(data.board);
+        setIsDealing(false);
+        handleStart();
+      } else {
+        reroll();
+      }
     }, []);
 
     useEffect(() => {
@@ -723,6 +737,17 @@ function Board(props: {
     recalculateHints(newDice, newUsedWords);
   }
 
+  const saveCallbackRef = useRef<() => void>();
+  saveCallbackRef.current = () => {
+    props.setSaveData(
+      score,
+      totalTimeSinceStart + Date.now() - startTime,
+      usedWords,
+      dice,
+    );
+  };
+
+
     // called at start and for unpause
     function handleStart() {
       setStartTime(Date.now());
@@ -731,6 +756,8 @@ function Board(props: {
       setIsPaused(false);
       intervalRef.current = setInterval(() => {
         setNow(Date.now());
+        if (saveCallbackRef.current)
+          saveCallbackRef.current();
       }, 10);
     }
 

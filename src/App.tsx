@@ -1,12 +1,11 @@
 import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
-import { useCookies } from 'react-cookie';
 
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
-import {GameStatsView, TGameStats } from './GameStats';
+import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 
 const VERSION = 'v0.1.1.15';
 
@@ -45,20 +44,33 @@ function getNRandom<T>(arr: T[], n: number): T[] {
   return result;
 }
 
-interface CookieValues {
-  save: {
+export interface CookieValues {
     phase: 'board'|'rewards' | 'view_dice' | 'stats',
-    timeLeft: number,
+    timeSinceStart: number,
     score: number,
     level: number,
     usedWords: string[],
-    board: (TDie | null)[][],
+    board: (TDie | null)[][], // the cookie method does not like multidimensional arrays?
     stats: TGameStats,
     dice: TDie[],
     choices: TDie[],
     rerollCounter: number | null,
-  }
 };
+
+  export function getDataFromSaveState(): CookieValues | null {
+    const data = localStorage.getItem('save'); 
+    if (data) {
+      try {
+        const parsedData: CookieValues = JSON.parse(data);
+        if (parsedData.phase && parsedData.dice) {
+          return parsedData;
+        }
+      } catch (e) {
+        console.error('Error parsing save data:', e);
+      }
+    }
+    return null;
+  }
 
 function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
@@ -68,38 +80,28 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice' | 'stats'>('rewards');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
-  const [stats, setStats] = useState<TGameStats>({
-    totalWords: 0,
-    longestWords: [''],
-    highestWordScoreWord: '',
-    highestWordScore: 0,
-    currentLevel: 0,
-    currentLevelScore: 0,
-    currentLevelRequiredScore: 0,
-    nLetterWords: {},
-  });
-  const [cookies, setCookie] = useCookies<'save', CookieValues>(['save']);
+  const [stats, setStats] = useState<TGameStats>(STARTING_STATS);
 
   const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
 
-  function setSaveCookieFromBoard(score: number, timeLeft: number, usedWords: Set<string>, board: (TDie | null)[][]) {
+  function setSaveDataFromBoard(score: number, timeSinceStart: number, usedWords: Set<string>, board: (TDie | null)[][]): void {
     const data = {
-      timeLeft, //Math.max(0, TimeLimit - (now - startTime) + timeBonus),
+      timeSinceStart,
       score,
       level,
       usedWords: Array.from(usedWords),
-      board,
+      board: board,
       stats,
       dice,
       choices,
       phase,
       rerollCounter,
     };
-    setCookie('save', data, {maxAge: 60 * 60 * 24 * 30 }); // Expires after 30 days
+    localStorage.setItem('save', JSON.stringify(data));
   }
 
-  function setSaveCookie() {
+  function setSaveData() {
     const data = {
       timeLeft: null, //Math.max(0, TimeLimit - (now - startTime) + timeBonus),
       score: null,
@@ -112,21 +114,25 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       phase,
       rerollCounter,
     };
-    setCookie('save', data, {maxAge: 60 * 60 * 24 * 30 }); // Expires after 30 days
-    console.log('Saving cookie', data);
+    localStorage.setItem('save', JSON.stringify(data));
   }
 
   useEffect(() => {
-    if (phase !== 'board' && !dieRecieved) {
-      setSaveCookie();
+    if (phase === 'stats' || phase === 'rewards' && choices.length > 0 && !dieRecieved) {
+      const data = getDataFromSaveState();
+      if (data && data.level && data.level >= level && phase === 'rewards') {
+        return;
+      }
+      setSaveData();
     }
-  }, [phase, level, dice, choices, rerollCounter, stats]);
+  }, [phase, level, dice, choices]);
 
-  function loadFromCookie(): boolean {
-    const data = cookies.save;
-    console.log('p', data);
-    if (data.phase) {
-      console.log('Loading from cookie', data);
+  function loadFromSaveState(): boolean {
+    const data = getDataFromSaveState();
+    if (data && data.phase && data.dice) {
+      if ((data.phase === 'rewards' || data.phase === 'view_dice') && !data.choices) {
+        return false;
+      }
       setPhase(data.phase);
       setDice(data.dice);
       setLevel(data.level);
@@ -139,7 +145,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   }
 
   useEffect(() => {
-    if (!loadFromCookie()) {
+    if (!loadFromSaveState()) {
       onRestart();
     }
     return () => {
@@ -178,6 +184,8 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     setPhase('rewards');
     setChoices(getNRandom(BASIC_DICE, 3));
     setRerollCounter(null);
+    setStats(STARTING_STATS);
+    localStorage.removeItem('save');
   }
 
   function onChooseReward(die: TDie) {
@@ -208,6 +216,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       setRerollCounter={setRerollCounter}
       stats={stats}
       setStats={setStats}
+      setSaveData={setSaveDataFromBoard}
     />;
   } else if (phase === 'rewards') {
     content = <RewardsPhase choices={choices} onChoice={(die) => {

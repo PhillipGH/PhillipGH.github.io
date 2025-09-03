@@ -13,6 +13,17 @@ export type TGameStats = {
   nLetterWords: { [i: number]: number };
 };
 
+ export const STARTING_STATS: TGameStats = {
+    totalWords: 0,
+    longestWords: [''],
+    highestWordScoreWord: '',
+    highestWordScore: 0,
+    currentLevel: 0,
+    currentLevelScore: 0,
+    currentLevelRequiredScore: 0,
+    nLetterWords: {},
+  };
+
 export function GameStats(props: { stats: TGameStats }) {
   const nLetterWords = Object.keys(props.stats.nLetterWords)
     .map(Number)
