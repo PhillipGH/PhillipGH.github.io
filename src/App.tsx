@@ -1,15 +1,14 @@
 import {useEffect, useRef, useState } from 'react'
 import './App.css'
 import React from 'react';
+import { useCookies } from 'react-cookie';
 
 import RewardsPhase, { DiceView } from './RewardsPhase';
 import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import {GameStatsView, TGameStats } from './GameStats';
 
-// import Cookies from 'js-cookie';
-
-const VERSION = 'v0.1.1.14';
+const VERSION = 'v0.1.1.15';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -46,6 +45,21 @@ function getNRandom<T>(arr: T[], n: number): T[] {
   return result;
 }
 
+interface CookieValues {
+  save: {
+    phase: 'board'|'rewards' | 'view_dice' | 'stats',
+    timeLeft: number,
+    score: number,
+    level: number,
+    usedWords: string[],
+    board: (TDie | null)[][],
+    stats: TGameStats,
+    dice: TDie[],
+    choices: TDie[],
+    rerollCounter: number | null,
+  }
+};
+
 function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [dice, setDice] = useState<TDie[]>(STARTER_DICE);
   const [choices, setChoices] = useState<TDie[]>([]);
@@ -64,15 +78,74 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     currentLevelRequiredScore: 0,
     nLetterWords: {},
   });
+  const [cookies, setCookie] = useCookies<'save', CookieValues>(['save']);
+
   const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
 
+  function setSaveCookieFromBoard(score: number, timeLeft: number, usedWords: Set<string>, board: (TDie | null)[][]) {
+    const data = {
+      timeLeft, //Math.max(0, TimeLimit - (now - startTime) + timeBonus),
+      score,
+      level,
+      usedWords: Array.from(usedWords),
+      board,
+      stats,
+      dice,
+      choices,
+      phase,
+      rerollCounter,
+    };
+    setCookie('save', data, {maxAge: 60 * 60 * 24 * 30 }); // Expires after 30 days
+  }
+
+  function setSaveCookie() {
+    const data = {
+      timeLeft: null, //Math.max(0, TimeLimit - (now - startTime) + timeBonus),
+      score: null,
+      level,
+      usedWords: null,
+      board: null,
+      stats,
+      dice,
+      choices,
+      phase,
+      rerollCounter,
+    };
+    setCookie('save', data, {maxAge: 60 * 60 * 24 * 30 }); // Expires after 30 days
+    console.log('Saving cookie', data);
+  }
+
   useEffect(() => {
+    if (phase !== 'board' && !dieRecieved) {
+      setSaveCookie();
+    }
+  }, [phase, level, dice, choices, rerollCounter, stats]);
+
+  function loadFromCookie(): boolean {
+    const data = cookies.save;
+    console.log('p', data);
+    if (data.phase) {
+      console.log('Loading from cookie', data);
+      setPhase(data.phase);
+      setDice(data.dice);
+      setLevel(data.level);
+      setStats(data.stats);
+      setChoices(data.choices);
+      setRerollCounter(data.rerollCounter);
+      return true;
+    }
+    return false;
+  }
+
+  useEffect(() => {
+    if (!loadFromCookie()) {
       onRestart();
-        return () => {
-          clearTimeout(timeoutRef.current);
-        };
-      }, []);
+    }
+    return () => {
+      clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (allowScroll) {

@@ -33,6 +33,17 @@ export const REROLL_TIME_BONUS = 30;
 export const DEL = '🔙'; // also update the regex in Board.tsx!
 export const EXCLAIM  = '!'; // also update the regex in Board.tsx!
 
+// TODO:
+// good consonants that turns into e if no vowels next to it
+// Q with global 1.5x on words 6 or longer
+// Z with global word wrap effect???
+
+// Choose a variant? mode? modifer? Each has unlock and trophy
+// - level 5 you must use 50% of squares on board level 6 60%
+// - a quarter of the time to get a quarter of the score
+// - level 5 get a word 7 or longer level 9 get a word 8 or longer
+
+
 const STARTER_DICE_FACES = [
     //'ennnda',
     'ipcelt',
