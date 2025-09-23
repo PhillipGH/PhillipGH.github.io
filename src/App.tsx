@@ -6,8 +6,10 @@ import RewardsPhase, { DiceView } from './RewardsPhase';
 import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
 import Board from './Board';
 import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
+import { Variant } from './Variants';
+import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.1.15';
+const VERSION = 'v0.1.2.1';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -45,10 +47,11 @@ function getNRandom<T>(arr: T[], n: number): T[] {
 }
 
 export interface CookieValues {
-    phase: 'board'|'rewards' | 'view_dice' | 'stats',
+    phase: 'mainmenu' | 'board'|'rewards' | 'view_dice' | 'stats',
     timeSinceStart: number,
     score: number,
     level: number,
+    variant: Variant,
     usedWords: string[],
     board: (TDie | null)[][], // the cookie method does not like multidimensional arrays?
     stats: TGameStats,
@@ -77,10 +80,11 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [choices, setChoices] = useState<TDie[]>([]);
   const [level, setLevel] = useState<number>(1);
   const [internalCounter, setInternalCounter] = useState<number>(1);
-  const [phase, setPhase] = useState<'board'|'rewards' | 'view_dice' | 'stats'>('rewards');
+  const [phase, setPhase] = useState<'mainmenu' | 'board'|'rewards' | 'view_dice' | 'stats'>('mainmenu');
   const [rerollCounter, setRerollCounter] = useState<number | null>(null);
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
   const [stats, setStats] = useState<TGameStats>(STARTING_STATS);
+  const [variant, setVariant] = useState<Variant>(Variant.BASE);
 
   const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
@@ -90,6 +94,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       timeSinceStart,
       score,
       level,
+      variant,
       usedWords: Array.from(usedWords),
       board: board,
       stats,
@@ -106,6 +111,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       timeLeft: null, //Math.max(0, TimeLimit - (now - startTime) + timeBonus),
       score: null,
       level,
+      variant,
       usedWords: null,
       board: null,
       stats,
@@ -139,6 +145,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       setStats(data.stats);
       setChoices(data.choices);
       setRerollCounter(data.rerollCounter);
+      setVariant(data.variant);
       return true;
     }
     return false;
@@ -146,7 +153,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   useEffect(() => {
     if (!loadFromSaveState()) {
-      onRestart();
+      onQuitRun();
     }
     return () => {
       clearTimeout(timeoutRef.current);
@@ -177,7 +184,12 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     setPhase('stats');
   }
 
-  function onRestart() {
+  function onQuitRun() {
+    setPhase('mainmenu');
+    localStorage.removeItem('save');
+  }
+
+  function onStartRun(variant: Variant) {
     setLevel(1);
     setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
@@ -185,7 +197,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     setChoices(getNRandom(BASIC_DICE, 3));
     setRerollCounter(null);
     setStats(STARTING_STATS);
-    localStorage.removeItem('save');
+    setVariant(variant);
   }
 
   function onChooseReward(die: TDie) {
@@ -201,6 +213,12 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       }
   }
 
+  if (phase === 'mainmenu') {
+    return <div className="game">
+      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH]} onStart={(variant: Variant) => {onStartRun(variant);}}/>
+    </div>;
+  }
+
   let content = <div/>;
   let viewButton : React.JSX.Element | null = null;
   if (phase === 'board') {
@@ -210,6 +228,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       dictionary={props.dictionary}
       dictionarySorted={props.dictionarySorted}
       level={level} onLose={onLose}
+      variant={variant}
       onWin={onWin}
       inputDice={dice.map((d, index) => {return {...d, id: index};})}
       rerollCounter={rerollCounter}
@@ -233,10 +252,14 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     content = <DiceView dice={dice} stats={stats}/>;
     viewButton = <button id='viewDice' onClick={() => {setPhase('rewards')}}>Back</button>
   } else if (phase === 'stats') {
-    content = <GameStatsView stats={stats} dice={dice} onRestart={onRestart}/>;
+    content = <GameStatsView stats={stats} dice={dice} onRestart={onQuitRun}/>;
+  }
+  let variantText = '';
+  if (variant !== Variant.BASE) {
+    variantText = ` - ${variant}`;
   }
   return <div className={allowScroll ? "game" : "game noselect"}>
-      <div id='topBar'><p>Level {level}</p><sup>{VERSION}</sup></div>
+      <div id='topBar'><p>Level {level}{variantText}</p><sup>{VERSION}</sup></div>
       {viewButton}
       {content}
     </div>;

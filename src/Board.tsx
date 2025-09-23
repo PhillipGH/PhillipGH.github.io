@@ -6,6 +6,7 @@ import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 import { solveForWords } from "./Solver";
 import {getDataFromSaveState } from "./App";
+import { Variant } from "./Variants";
 
 type TEvent = { die?: TDie, timing: number};
 
@@ -24,7 +25,7 @@ const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 // }
 
 // for (let i = 1; i <= 15; i++) {
-//   console.log(i, getRequiredScore(i), 5 + i * 3 + Math.round(4*Math.log(i)));
+//   console.log(i, getRequiredScore( Variant.BASE, i), getRequiredScore( Variant.WORDSMITH, i));
 // }
 
 // function fib(n: number): number {
@@ -39,7 +40,11 @@ function getBaseScore(n: number): number {
   return getBaseScore(n - 1) * 2 - 1;
 }
 
-function getRequiredScore(level: number): number {
+function getRequiredScore(variant: Variant, level: number): number {
+  if (variant === Variant.WORDSMITH) {
+    if (level < 3) return level * 3;
+      return -2 + level * 4;
+  }
   return 5 + level * 3 + Math.round(4*Math.log(level));
 }
 
@@ -133,7 +138,7 @@ function chunkArray<T>(arr: T[], columns: number) {
     return tokens;
   }
 
-  function scoreWord(word: string, dice: TDie[], currentLevel: number) {
+  function scoreWord(word: string, dice: TDie[], currentLevel: number, variant: Variant) {
     let multiplier = 1;
     let bonus = 0;
     let penalty = 0;
@@ -182,8 +187,11 @@ function chunkArray<T>(arr: T[], columns: number) {
               break;
         }
     }
-    const baseScore = getBaseScore(length);
+    let baseScore = getBaseScore(length);
     // return Math.round((baseScore + bonus) * multiplier - penalty);
+    if (variant === Variant.WORDSMITH && length < 5) {
+      baseScore = 0;
+    }
     return {baseScore, bonus, multiplier, penalty};
 }
 
@@ -193,13 +201,14 @@ function DisplayWord(props: {
   currentWord: TDie[],
   lastWord: TLastWord,
   currentLevel: number,
+  variant: Variant,
 }) {
   let word : JSX.Element | null = null;
   let suffix : JSX.Element | null = null;
   if (props.currentWord.length > 0) {
     let w = props.currentWord.map(d => d.letter).join('');
     const tokens = tokenizeWord(w);
-    const s = scoreWord(w, props.currentWord, props.currentLevel);
+    const s = scoreWord(w, props.currentWord, props.currentLevel, props.variant);
     w = '';
     let delCounter = 0;
     for (let i = 0; i < tokens.length; i++) {
@@ -250,10 +259,42 @@ function DisplayWord(props: {
     </div>
 }
 
+function PauseMenu(props: {
+  onResume: () => void,
+  onQuit: () => void,
+}) {
+  const [iSQuitting, setIsQuitting] = useState(false);
+  if (iSQuitting) {
+    return <div>
+    <h2>Are you sure you want to quit this run?</h2>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <button onClick={() => {
+        props.onQuit();
+      }}>Yes</button>
+      <button onClick={() => {
+        setIsQuitting(false);
+      }}>No</button>
+    </div>
+  </div>;
+  }
+  return <div>
+    <h2>Paused</h2>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <button onClick={() => {
+        props.onResume();
+      }}>Continue</button>
+      <button onClick={() => {
+        setIsQuitting(true);
+      }}>Quit Run</button>
+    </div>
+  </div>;
+}
+
 function Board(props: {
   dictionary: Set<string>,
   dictionarySorted: string[],
   level: number,
+  variant: Variant,
   inputDice: TDie[],
   onWin: () => void,
   onLose: () => void,
@@ -401,7 +442,7 @@ function Board(props: {
 
     const intervalRef = useRef(0);
 
-    let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.level);
+    let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.variant, props.level);
     const TimeLimit = OVERRIDE_TIME || 95 + props.level * 5;
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
@@ -702,7 +743,7 @@ function Board(props: {
         } else {
           newUsedWords = new Set(usedWords.add(word));
           setUsedWords(newUsedWords);
-          const s = scoreWord(word, currentWord, props.level);
+          const s = scoreWord(word, currentWord, props.level, props.variant);
           if (s)
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
           setScore(score + scoreChange);
@@ -805,7 +846,7 @@ function Board(props: {
     const timerSaturation = timerSaturationProgress * 70.0 + 30.0;
   
     let progress = Math.min((score / requiredScore) * 100, 100);
-
+    
     let overlay : null | JSX.Element = null;
     if (score >= requiredScore) {
       overlay = <div id="boardOverlay" className="winOverlay">
@@ -819,12 +860,7 @@ function Board(props: {
     }
     if (isPaused) {
       overlay = <div id="boardOverlay">
-        <div>
-          <h2>Paused</h2>
-          <button onClick={() => {
-            handleStart();
-          }}>Continue</button>
-        </div>
+       <PauseMenu onQuit={props.onLose} onResume={handleStart}></PauseMenu>
       </div>;
     }
 
@@ -876,6 +912,7 @@ function Board(props: {
           lastWord={lastWord}
           currentWord={currentWord}
           currentLevel={props.level}
+          variant={props.variant}
         />
         <div className="container">
           <Grid
