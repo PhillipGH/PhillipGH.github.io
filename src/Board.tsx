@@ -315,7 +315,7 @@ function Board(props: {
       clearTimeout(eventTimeoutRef.current);
       handleStop();
       const columns = props.inputDice.length < 21 ? 4 : 5;
-      const diceOrdered = rollBoard(props.inputDice);
+      const diceOrdered = rollBoard(dice.length > 0 ? dice.flat().filter(d => d != null) as TDie[] : props.inputDice);
       const diceChunked = chunkArray(diceOrdered, columns);
       setDice(diceChunked);
 
@@ -339,8 +339,10 @@ function Board(props: {
         switch (diceOrdered[i].bonus) {
           case DiceBonus.B_XREROLL:
             if (
-              diceOrdered[i].letter === "x" ||
-              diceOrdered[i].letter === "z"
+              diceOrdered[i].counter == null
+              &&
+              (diceOrdered[i].letter === "x" ||
+              diceOrdered[i].letter === "z")
             ) {
               events.push({ die: diceOrdered[i], timing: 500 });
             }
@@ -364,6 +366,8 @@ function Board(props: {
           case DiceBonus.B_XREROLL:
             props.setRerollCounter((c) => (c || 0) + 1);
             bonusText.push({ die: event.die, str: "+1 Reroll" });
+            event?.die && (event.die.counter = 1);
+            setDice([...diceChunked]);
             break;
           case DiceBonus.B_CORNER_SWAP:
             if (corners.length === 0) break;

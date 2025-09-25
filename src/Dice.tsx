@@ -156,7 +156,7 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
         case DiceBonus.B_2_REROLL:
             return { title: '+2 reroll charges', desc: DieDescription.REROLL_CHARGE };
         case DiceBonus.B_XREROLL:
-            return { title: 'On board reroll, +1 reroll charge if this lands on x or z', desc: DieDescription.REROLL_CHARGE };
+            return { title: 'On board reroll once per level, +1 reroll charge if this lands on x or z', desc: DieDescription.REROLL_CHARGE };
         case DiceBonus.B_ALPHABET:
             return { title: '1.5x and a → b', description: '1.5x word score and changes to the next letter in the alphabet.', hasSideEffect: true };
         case DiceBonus.B_MULTIPLIER_COUNTER:
