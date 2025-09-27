@@ -447,8 +447,20 @@ function Board(props: {
     const intervalRef = useRef(0);
 
     let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.variant, props.level);
-    const TimeLimit = OVERRIDE_TIME || 95 + props.level * 5;
+    const TimeLimit = getTimeLimit();
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
+
+    function getTimeLimit(): number {
+      if (OVERRIDE_TIME != null) return OVERRIDE_TIME;
+      switch (props.variant) {
+        case Variant.WORDSMITH:
+          return 90;
+        case Variant.BASE:
+        default:
+          return 95 + props.level * 5;
+      }
+    }
+
 
   function wordIsInDictionary(word: TDie[]): {dice: TDie[], contributions: string[]} | null {
     return wordIsInDictionaryHelper(word, word.map(d => d.letter));
@@ -730,6 +742,7 @@ function Board(props: {
   function commitWord() {
     let suffix: string | null = null;
     let scoreChange = 0;
+    let timeChange = 0;
     let word = currentWord.map(d => d.letter).join('');
     let newUsedWords = usedWords;
     let newDice = dice;
@@ -748,9 +761,17 @@ function Board(props: {
           newUsedWords = new Set(usedWords.add(word));
           setUsedWords(newUsedWords);
           const s = scoreWord(word, currentWord, props.level, props.variant);
-          if (s)
+          if (s) {
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
+            if (props.variant === Variant.WORDSMITH) {
+              if ( word.length >= 5) {
+                timeChange = 2 * word.length; // 2 seconds per letter
+              }
+            }
+          }
+            
           setScore(score + scoreChange);
+          setTimeBonus(t => t + timeChange);
           if (score + scoreChange >= requiredScore) {
             clearInterval(intervalRef.current);
           }
