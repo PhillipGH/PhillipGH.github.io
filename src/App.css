@@ -98,6 +98,10 @@
   }
 }
 
+.blackout {
+  background-color: var(--blackout-color);
+}
+
 .transit {
   position: absolute;
   left: 0;

@@ -111,9 +111,9 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
     const die : TDie = props.die;
     const hasSideEffect = getDiceBonusText(die.bonus || DiceBonus.B_2X).hasSideEffect;
-    let letterClass = die.letter.length < 3 ? 'keyLetter' : (die.letter.length < 4 ? 'keyLetterMedium' : 'keyLetterSmall');
+    let textClass = die.letter.length < 3 ? 'keyLetter' : (die.letter.length < 4 ? 'keyLetterMedium' : 'keyLetterSmall');
     if (hasSideEffect) {
-      letterClass += ' sideEffect';
+      textClass += ' sideEffect';
     }
 
     let x = props.i * SPACING;
@@ -128,6 +128,11 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
     if (isRolling) {
       c += ' rolling';
+    }
+
+    let letterClass = props.isSelected ? 'letter selectedLetter' :'letter';
+    if (die.usedThisLevel)  {
+      letterClass += ' blackout';
     }
 
     if (props.isDealing) {
@@ -148,18 +153,18 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       style={{left: x, top: y}}
       className={c}>
       {props.bonusText && <p className="bonusText">{props.bonusText}</p>}
-      <div className={props.isSelected ? 'letter selectedLetter' :'letter'} onPointerDown={(e) => props.onClick(e, die)}>
+      <div className={letterClass} onPointerDown={(e) => props.onClick(e, die)}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}
           onPointerEnter={() => props.onEnter(die)}>
-            <p className={letterClass}>{displayLetter.toUpperCase()}</p>
+            <p className={textClass}>{displayLetter.toUpperCase()}</p>
         </div>
         {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die, props.gameContext)}</p>: null}
       </div>
       {isRolling? <div className={'nextLetter'}>
         <div
           className={props.isRotating ? 'letterDiv letterRot': 'letterDiv'}>
-            <p className={letterClass}>{nextLetter.toUpperCase()}</p>
+            <p className={textClass}>{nextLetter.toUpperCase()}</p>
         </div>
         {die.bonus ? <p className="bonus letterBonus">{getSquareBonusDisplay(die, props.gameContext)}</p>: null}
       </div>

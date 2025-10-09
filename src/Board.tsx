@@ -41,11 +41,15 @@ function getBaseScore(n: number): number {
 }
 
 function getRequiredScore(variant: Variant, level: number): number {
-  if (variant === Variant.WORDSMITH) {
-    if (level < 3) return level * 3;
-      return -2 + level * 4;
+  switch (variant) {
+    case Variant.WORDSMITH:
+      if (level < 3) return level * 3;
+        return -2 + level * 4;
+    case Variant.BLACKOUT:
+      return 5 + level * 3;
+    case Variant.BASE:
+      return 5 + level * 3 + Math.round(4*Math.log(level));
   }
-  return 5 + level * 3 + Math.round(4*Math.log(level));
 }
 
 const ROTATION_COORDS: [number, number][] = [
@@ -441,6 +445,7 @@ function Board(props: {
     const [isPaused, setIsPaused] = useState(false);
     const [eventsQueue, setEventsQueue] = useState<TEvent[]>([]);
     const [bonusText, setBonusText] = useState<{die: TDie, str: string}[]>([]);
+    const [levelisWon, setLevelIsWon] = useState(false);
 
     const isInEvent = eventsQueue.length > 0;
 
@@ -587,6 +592,8 @@ function Board(props: {
     let swapDice = 0;
     for (let i = 0; i < word.dice.length; i++) {
       let die = word.dice[i];
+      if (props.variant === Variant.BLACKOUT)
+        die.usedThisLevel = true;
       switch (die.bonus) {
         case DiceBonus.B_ALPHABET:
           die.letter = nextAlphabetLetter(die.letter);
@@ -765,7 +772,7 @@ function Board(props: {
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
             if (props.variant === Variant.WORDSMITH) {
               if ( word.length >= 5) {
-                timeChange = 2 * word.length; // 2 seconds per letter
+                timeChange = -11 + 3 * word.length; // 3 seconds per letter
               }
             }
           }
@@ -773,9 +780,16 @@ function Board(props: {
           setScore(score + scoreChange);
           setTimeBonus(t => t + timeChange);
           if (score + scoreChange >= requiredScore) {
-            clearInterval(intervalRef.current);
+            if (props.variant === Variant.BLACKOUT) {
+              // wrap the score around and give +1 reroll
+              setScore(score + scoreChange - requiredScore); // TODO handle multiple rerolls
+              props.setRerollCounter((props.rerollCounter || 0) + 1);
+            } else {
+              clearInterval(intervalRef.current);
+              setLevelIsWon(true);
+            }
           }
-
+          
           props.stats.totalWords++;
           if (props.stats.nLetterWords[word.length] == null) {
             props.stats.nLetterWords[word.length] = 0;
@@ -792,6 +806,23 @@ function Board(props: {
           }
           props.setStats(props.stats);
           newDice = mutateBoard(result);
+          if (props.variant === Variant.BLACKOUT) {
+            // check if all dice are used
+            let allUsed = true;
+            for (let i = 0; i < newDice.length; i++) {
+              for (let j = 0; j < newDice[i].length; j++) {
+                const die = newDice[i][j];
+                if (die && !die.usedThisLevel) {
+                  allUsed = false;
+                  break;
+                }
+              }
+            }
+            if (allUsed) {
+              clearInterval(intervalRef.current);
+              setLevelIsWon(true);
+            }
+          }
         }
       }
     } else {
@@ -873,7 +904,7 @@ function Board(props: {
     let progress = Math.min((score / requiredScore) * 100, 100);
     
     let overlay : null | JSX.Element = null;
-    if (score >= requiredScore) {
+    if (levelisWon) {
       overlay = <div id="boardOverlay" className="winOverlay">
         <div>
           <h2>Level {props.level} Complete!</h2>

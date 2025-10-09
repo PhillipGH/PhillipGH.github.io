@@ -2,6 +2,7 @@
 export enum Variant {
     BASE = 'Standard',
     WORDSMITH = 'Wordsmith',
+    BLACKOUT = 'Blackout',
 }
 
 export function getVariantDescription(variant: Variant): string {
@@ -9,6 +10,8 @@ export function getVariantDescription(variant: Variant): string {
         case Variant.BASE:
             return 'Let\'s get wordy!!';
         case Variant.WORDSMITH:
-            return 'Ready for a challenge? Words less than 5 letters long give 0 points!';
+            return 'Ready for a challenge? Words less than 5 letters long give 0 points! Words give bonus time!';
+        case Variant.BLACKOUT:
+            return 'Use all dice to beat a level! Points grant rerolls!';
     }
 }

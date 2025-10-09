@@ -25,8 +25,17 @@ export enum DieDescription {
     REROLL_CHARGE,
     HEARTS,
 }
-export type TDie = { letter: string, faces: string[], bonus: DiceBonus | null, counter?: number, savedStr?: string, desc?: DieDescription,  id?: number};
-export type TGameContext = {currentLevel: number};
+export type TDie = {
+    letter: string,
+    faces: string[],
+    bonus: DiceBonus | null,
+    counter?: number,
+    savedStr?: string,
+    desc?: DieDescription,
+    id?: number,
+    usedThisLevel?: boolean,
+};
+export type TGameContext = { currentLevel: number };
 
 export const REROLL_TIME_BONUS = 30;
 

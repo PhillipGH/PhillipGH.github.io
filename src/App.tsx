@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.3';
+const VERSION = 'v0.1.2.4';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -215,7 +215,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   if (phase === 'mainmenu') {
     return <div className="game">
-      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH]} onStart={(variant: Variant) => {onStartRun(variant);}}/>
+      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH, Variant.BLACKOUT]} onStart={(variant: Variant) => {onStartRun(variant);}}/>
     </div>;
   }
 
