@@ -6,15 +6,13 @@ import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 import { solveForWords } from "./Solver";
 import {getDataFromSaveState } from "./App";
-import { Variant } from "./Variants";
+import { getRequiredScore, getTimeLimit, Variant } from "./Variants";
 
 type TEvent = { die?: TDie, timing: number};
 
 // missing words: natal
 // fake words: ted, tho, lite
 
-const OVERRIDE_SCORE = null;
-const OVERRIDE_TIME = null;
 const ALL_WORDS_VALID = false;
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -38,18 +36,6 @@ function getBaseScore(n: number): number {
   if (n <= 4) return 1;
   if (n === 5) return 3;
   return getBaseScore(n - 1) * 2 - 1;
-}
-
-function getRequiredScore(variant: Variant, level: number): number {
-  switch (variant) {
-    case Variant.WORDSMITH:
-      if (level < 3) return level * 3;
-        return -2 + level * 4;
-    case Variant.BLACKOUT:
-      return 5 + level * 3;
-    case Variant.BASE:
-      return 5 + level * 3 + Math.round(4*Math.log(level));
-  }
 }
 
 const ROTATION_COORDS: [number, number][] = [
@@ -354,6 +340,9 @@ function Board(props: {
           case DiceBonus.B_CORNER_SWAP:
             events.push({ die: diceOrdered[i], timing: 500 });
             break;
+          case DiceBonus.B_VOWEL_SWAP:            
+            events.push({ die: diceOrdered[i], timing: 500 });
+            break;
         }
       }
       setEventsQueue(events);
@@ -384,6 +373,23 @@ function Board(props: {
             let temp = diceChunked[x1][y1];
             diceChunked[x1][y1] = diceChunked[c[0]][c[1]];
             diceChunked[c[0]][c[1]] = temp;
+            setDice([...diceChunked]);
+            break;
+          case DiceBonus.B_VOWEL_SWAP:
+            const [x,y] = getDiceCoord(event.die, diceChunked);
+            console.log(x,y);
+            // check if any adjacent dice are vowels
+            let adjacentVowelCount = 0;
+            for (let [dx, dy] of ROTATION_COORDS) {
+              if (diceChunked[x + dx]?.[y + dy]?.letter.match(/(?<!q)[aeiou]/)) {
+                console.log(diceChunked[x + dx]?.[y + dy]?.letter);
+                adjacentVowelCount++;
+              }
+            }
+            if (adjacentVowelCount > 1) break;
+            bonusText.push({ die: event.die, str: "Vowel Swap" });
+            // change die to 'e'
+            event.die.letter = 'e';
             setDice([...diceChunked]);
             break;
         }
@@ -451,20 +457,10 @@ function Board(props: {
 
     const intervalRef = useRef(0);
 
-    let requiredScore = OVERRIDE_SCORE || getRequiredScore(props.variant, props.level);
-    const TimeLimit = getTimeLimit();
+    let requiredScore = getRequiredScore(props.variant, props.level);
+    const TimeLimit = getTimeLimit(props.variant, props.level);
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
-    function getTimeLimit(): number {
-      if (OVERRIDE_TIME != null) return OVERRIDE_TIME;
-      switch (props.variant) {
-        case Variant.WORDSMITH:
-          return 90;
-        case Variant.BASE:
-        default:
-          return 95 + props.level * 5;
-      }
-    }
 
 
   function wordIsInDictionary(word: TDie[]): {dice: TDie[], contributions: string[]} | null {

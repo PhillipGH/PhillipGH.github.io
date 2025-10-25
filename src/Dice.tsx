@@ -17,6 +17,7 @@ export enum DiceBonus {
     B_CORNER_SWAP = 'corner',
     B_PLUS_LEVEL = '+<level>',
     B_HINT = 'hint',
+    B_VOWEL_SWAP = 'vowel swap',
 }
 
 export enum DieDescription {
@@ -99,6 +100,7 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL }, //{ faces: ['x', 'z', 'x', 'z', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
     { faces: ['c', 'o', 'r', 'n', 'e', 'r'], bonus: DiceBonus.B_CORNER_SWAP },
     { faces: ['a','b','c', 'd', 'e', 'f'], bonus: DiceBonus.B_PLUS_LEVEL },
+    { faces: ['l','n','r', 't', 't', 'r'], bonus: DiceBonus.B_VOWEL_SWAP},
 
 ].map(d => ({ letter: d.faces[0], ...d }));
 
@@ -116,7 +118,8 @@ export const RARE_DICE: TDie[] = [
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
-// STARTER_DICE.push(BASIC_DICE[11]);
+ STARTER_DICE.push(BASIC_DICE[16]);
+ STARTER_DICE.push(BASIC_DICE[16]);
 // STARTER_DICE.push(RARE_DICE[8]);
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
@@ -184,6 +187,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: '+<level>', description: '+<level> points if word is longer than <level> letters'};
         case DiceBonus.B_HINT:
             return { title: 'hint', description: 'says the first 4 letters of a word of length > 4 starting with this die'};
+        case DiceBonus.B_VOWEL_SWAP:
+            return { title: 'vowel swap', description: 'On reroll, if fewer than 2 adjacent dice are vowels, this die becomes an \'e\''};
         default:
             throw new Error('unknown bonus type');
     }

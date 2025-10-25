@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.4';
+const VERSION = 'v0.1.2.5';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
