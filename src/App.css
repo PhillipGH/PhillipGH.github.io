@@ -546,6 +546,13 @@
  color: var(--background-color);
 }
 
+.variantInMenu {
+  margin: 10px;
+  padding: 20px;
+  border: 2px solid black;
+  border-radius: 8px;
+}
+
 #loading {
   animation: loadingAni 1.5s linear infinite;
 }

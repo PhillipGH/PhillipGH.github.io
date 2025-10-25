@@ -86,7 +86,7 @@ export function GameStatsView(props: {
           props.onRestart();
         }}
       >
-        Restart
+        Return to Menu
       </button>
       <h2>Stats:</h2>
       <GameStats stats={props.stats} />
