@@ -118,9 +118,8 @@ export const RARE_DICE: TDie[] = [
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
- STARTER_DICE.push(BASIC_DICE[16]);
- STARTER_DICE.push(BASIC_DICE[16]);
-// STARTER_DICE.push(RARE_DICE[8]);
+// STARTER_DICE.push(BASIC_DICE[16]);
+// STARTER_DICE.push(RARE_DICE[4]);
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
     switch (die.bonus) {

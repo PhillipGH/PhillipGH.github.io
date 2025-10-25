@@ -502,8 +502,7 @@ function Board(props: {
       regex = /[a-z]\/[a-z]/;
     } else if (dieStr[letterIndex] === DEL[0]) {
       // remove dieIndex from word
-      dice.splice(dieIndex, 1);
-      contributions.splice(dieIndex, 1);
+      contributions[dieIndex] = '';
       //const tokens = tokenizeWord(word);
       for (let i = 0; i < dice.length; i++) {
         // TODO maybe we should make it so deletes can't delete other deletes?
