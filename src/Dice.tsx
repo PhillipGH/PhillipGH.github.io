@@ -44,7 +44,6 @@ export const DEL = '🔙'; // also update the regex in Board.tsx!
 export const EXCLAIM  = '!'; // also update the regex in Board.tsx!
 
 // TODO:
-// good consonants that turns into e if no vowels next to it
 // Q with global 1.5x on words 6 or longer
 // Z with global word wrap effect???
 
@@ -175,7 +174,7 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
         case DiceBonus.B_MINUS1:
             return { title: '-1', description: '-1 points for word' };
         case DiceBonus.B_REROLL_WORD:
-            return { title: 'reroll word', description: 'when used, -2 points and all dice in word rerolled', hasSideEffect: true };
+            return { title: 'reroll word', description: 'when used, -2 points and all dice in word rerolled and +5 seconds of time', hasSideEffect: true };
         case DiceBonus.B_ROTATE:
             return { title: '🔃 rotate dice', description: 'when used, rotates all the dice surrounding this one clockwise one position', hasSideEffect: true };
         case DiceBonus.B_SWAP:

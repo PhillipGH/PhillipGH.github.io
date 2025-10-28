@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.6';
+const VERSION = 'v0.1.2.7';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -46,7 +46,7 @@ function getNRandom<T>(arr: T[], n: number): T[] {
   return result;
 }
 
-export interface CookieValues {
+export interface RoundCookieValues {
     phase: 'mainmenu' | 'board'|'rewards' | 'view_dice' | 'stats',
     timeSinceStart: number,
     score: number,
@@ -60,12 +60,34 @@ export interface CookieValues {
     rerollCounter: number | null,
 };
 
-  export function getDataFromSaveState(): CookieValues | null {
-    const data = localStorage.getItem('save'); 
+export interface PermCookieValues {
+    maxLevelReached: { [key in Variant]?: number },
+};
+
+const ROUND_COOKIE_NAME = 'save';
+const PERM_COOKIE_NAME = 'perm_save';
+
+  export function getRoundDataFromSaveState(): RoundCookieValues | null {
+    const data = localStorage.getItem(ROUND_COOKIE_NAME); 
     if (data) {
       try {
-        const parsedData: CookieValues = JSON.parse(data);
+        const parsedData: RoundCookieValues = JSON.parse(data);
         if (parsedData.phase && parsedData.dice) {
+          return parsedData;
+        }
+      } catch (e) {
+        console.error('Error parsing save data:', e);
+      }
+    }
+    return null;
+  }
+
+  export function getPermDataFromSaveState(): PermCookieValues | null {
+    const data = localStorage.getItem(PERM_COOKIE_NAME); 
+    if (data) {
+      try {
+        const parsedData: PermCookieValues = JSON.parse(data);
+        if (parsedData.maxLevelReached) {
           return parsedData;
         }
       } catch (e) {
@@ -103,7 +125,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       phase,
       rerollCounter,
     };
-    localStorage.setItem('save', JSON.stringify(data));
+    localStorage.setItem(ROUND_COOKIE_NAME, JSON.stringify(data));
   }
 
   function setSaveData() {
@@ -120,21 +142,37 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       phase,
       rerollCounter,
     };
-    localStorage.setItem('save', JSON.stringify(data));
+    localStorage.setItem(ROUND_COOKIE_NAME, JSON.stringify(data));
+    
+    const permData = getPermDataFromSaveState();
+    if (!permData) {
+      const newPermData: PermCookieValues = {
+        maxLevelReached: {
+          [variant]: level,
+        },
+      }
+      localStorage.setItem(PERM_COOKIE_NAME, JSON.stringify(newPermData));
+    } else {
+      if (permData.maxLevelReached[variant] == null || permData.maxLevelReached[variant] < level) {
+        permData.maxLevelReached[variant] = level;
+        localStorage.setItem(PERM_COOKIE_NAME, JSON.stringify(permData));
+      }
+    }
+    
   }
 
   useEffect(() => {
     if (phase === 'stats' || phase === 'rewards' && choices.length > 0 && !dieRecieved) {
-      const data = getDataFromSaveState();
+      const data = getRoundDataFromSaveState();
       if (data && data.level && data.level >= level && phase === 'rewards') {
         return;
       }
       setSaveData();
     }
-  }, [phase, level, dice, choices]);
+  }, [phase, level, dice, choices, variant]);
 
   function loadFromSaveState(): boolean {
-    const data = getDataFromSaveState();
+    const data = getRoundDataFromSaveState();
     if (data && data.phase && data.dice) {
       if ((data.phase === 'rewards' || data.phase === 'view_dice') && !data.choices) {
         return false;
@@ -186,7 +224,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   function onQuitRun() {
     setPhase('mainmenu');
-    localStorage.removeItem('save');
+    localStorage.removeItem(ROUND_COOKIE_NAME);
   }
 
   function onStartRun(variant: Variant) {

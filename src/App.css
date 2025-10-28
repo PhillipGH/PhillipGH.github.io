@@ -553,6 +553,12 @@
   border-radius: 8px;
 }
 
+.maxLevelReached {
+  margin-top: 10px;
+  font-weight: 100;
+  float: right;
+}
+
 #loading {
   animation: loadingAni 1.5s linear infinite;
 }

@@ -5,7 +5,7 @@ import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 import { solveForWords } from "./Solver";
-import {getDataFromSaveState } from "./App";
+import {getRoundDataFromSaveState } from "./App";
 import { getRequiredScore, getTimeLimit, Variant } from "./Variants";
 
 type TEvent = { die?: TDie, timing: number};
@@ -411,7 +411,7 @@ function Board(props: {
     }
     useEffect(() => {
       // if we have a cookie, use it, else reroll
-      const data = getDataFromSaveState();
+      const data = getRoundDataFromSaveState();
       if (data && data.level === props.level && data.board?.length) {
         setTotalTimeSinceStart(data.timeSinceStart);
         setScore(data.score);
@@ -599,6 +599,8 @@ function Board(props: {
           setDice([...dice]);
           break;
         case DiceBonus.B_REROLL_WORD:
+          bonusText.push({die: die, str: '+5 seconds'});
+          setTimeBonus(t => t + 5);
           rerollWord = true;
           break;
         case DiceBonus.B_ROTATE:
