@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.7';
+const VERSION = 'v0.1.2.8';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -107,6 +107,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [dieRecieved, setDieRecieved] = useState<boolean>(false);
   const [stats, setStats] = useState<TGameStats>(STARTING_STATS);
   const [variant, setVariant] = useState<Variant>(Variant.BASE);
+  const [usedWords, setUsedWords] = useState(new Set<string>());
 
   const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
@@ -274,6 +275,8 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       stats={stats}
       setStats={setStats}
       setSaveData={setSaveDataFromBoard}
+      usedWords={usedWords}
+      setUsedWords={setUsedWords}
     />;
   } else if (phase === 'rewards') {
     content = <RewardsPhase choices={choices} onChoice={(die) => {

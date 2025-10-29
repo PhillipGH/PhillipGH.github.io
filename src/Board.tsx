@@ -22,10 +22,6 @@ const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 //   console.log(i, i - 3 + fib(i-2) * 3, getBaseScore(i));
 // }
 
-// for (let i = 1; i <= 15; i++) {
-//   console.log(i, getRequiredScore( Variant.BASE, i), getRequiredScore( Variant.WORDSMITH, i));
-// }
-
 // function fib(n: number): number {
 //   if (n === 0) return 0;
 //   if (n === 1) return 1;
@@ -293,6 +289,8 @@ function Board(props: {
   stats: TGameStats,
   setStats: (n: TGameStats) => void,
   setSaveData: (score: number, timeSinceStart: number, usedWords: Set<string>, board: (TDie | null)[][]) => void,
+  usedWords: Set<string>,
+  setUsedWords: React.Dispatch<React.SetStateAction<Set<string>>>,
 }) {
 
   function useRerollCharge() {
@@ -415,11 +413,14 @@ function Board(props: {
       if (data && data.level === props.level && data.board?.length) {
         setTotalTimeSinceStart(data.timeSinceStart);
         setScore(data.score);
-        setUsedWords(new Set(data.usedWords));
+        props.setUsedWords(new Set(data.usedWords));
         setDice(data.board);
         setIsDealing(false);
         handleStart();
       } else {
+        if (props.variant !== Variant.BLACKOUT) {
+          props.setUsedWords(new Set());
+        }
         reroll();
       }
     }, []);
@@ -441,8 +442,6 @@ function Board(props: {
     const timeoutRef = useRef(0);
     const eventTimeoutRef = useRef(0);
     const [timeBonus, setTimeBonus] = useState(0);
-  
-    const [usedWords, setUsedWords] = useState(new Set<string>());
   
     //timer
     const [startTime, setStartTime] = useState(0);
@@ -509,7 +508,7 @@ function Board(props: {
         const ref2 = { isUsed: false };
         let result = wordIsInDictionaryHelper(spliceNoMutate(dice, i), spliceNoMutate(contributions, i), ref2);
         if (result) {
-          if (ref2.isUsed || usedWords.has(result.contributions.join(""))) {
+          if (ref2.isUsed || props.usedWords.has(result.contributions.join(""))) {
             ref.isUsed = true;
             usedWord = result;
           } else {
@@ -528,7 +527,7 @@ function Board(props: {
       contributionsCopy[dieIndex] = newString;
       let result = wordIsInDictionaryHelper(dice, contributionsCopy, ref2);
       if (result) {
-        if (ref2.isUsed || usedWords.has(result.contributions.join(""))) {
+        if (ref2.isUsed || props.usedWords.has(result.contributions.join(""))) {
           ref.isUsed = true;
           usedWord = result;
         } else {
@@ -563,7 +562,7 @@ function Board(props: {
             let hint: string | null = null;
             let longest = '';
             for (const s of hints) {
-              if (used ? used.has(s) : usedWords.has(s)) continue;
+              if (used ? used.has(s) : props.usedWords.has(s)) continue;
               if (s.length > longest.length) {
                 longest = s;
               }
@@ -748,7 +747,7 @@ function Board(props: {
     let scoreChange = 0;
     let timeChange = 0;
     let word = currentWord.map(d => d.letter).join('');
-    let newUsedWords = usedWords;
+    let newUsedWords = props.usedWords;
     let newDice = dice;
     if (word.length === 0) {
       return;
@@ -759,11 +758,11 @@ function Board(props: {
       if (word.length < 3) {
         suffix = String.fromCodePoint(0x1f6ab) + ' (too short)';
       } else {
-        if (usedWords.has(word)) {
+        if (props.usedWords.has(word)) {
           suffix = String.fromCodePoint(0x1f6ab) + ' (already played)';
         } else {
-          newUsedWords = new Set(usedWords.add(word));
-          setUsedWords(newUsedWords);
+          newUsedWords = new Set(props.usedWords.add(word));
+          props.setUsedWords(newUsedWords);
           const s = scoreWord(word, currentWord, props.level, props.variant);
           if (s) {
             scoreChange = Math.round((s.baseScore + s.bonus) * s.multiplier - s.penalty);
@@ -836,7 +835,7 @@ function Board(props: {
     props.setSaveData(
       score,
       totalTimeSinceStart + Date.now() - startTime,
-      usedWords,
+      props.usedWords,
       dice,
     );
   };
