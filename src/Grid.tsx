@@ -65,7 +65,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
         clearInterval(intervalRef.current);
       };
       isAlreadyRenderingRef.current = true;
-      if (props.die && props.die.letter !== lastLetter) {
+      if (props.die && props.die.letter !== lastLetter && (props.die.id || 0) < 100) {
         clearInterval(intervalRef.current);
         setLastLetter(props.die.letter);
         let letters = props.die.faces.slice();
@@ -244,10 +244,12 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     bonusText: {die: TDie, str: string}[],
     gameContext: TGameContext,
     setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
+    onWrapHorizontal: (isRight: boolean) => void,
     commitWord: () => void,
   } ) {
     const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
     const [isMouseDown, setIsMouseDown] = useState(false);
+    const [wrapReset, setWrapReset] = useState(true);
     let [points, setPoints] = useState<{x: number, y: number}[]>([]);
     useEffect(() => {
       function onMouseUp() {
@@ -272,8 +274,35 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       }
       return squaresRef.current;
     }
-  
-    function onClick(e: PointerEvent<HTMLDivElement>,die: TDie) {
+
+    // add event listener for when the pointer moves outside the grid while mouse is down
+    useEffect(() => {
+      function onPointerMove(e: globalThis.PointerEvent) {
+        if (!isMouseDown) return;
+        // check if pointer is outside the grid
+        const grid = document.getElementsByClassName('grid')[0];
+        const rect = grid.getBoundingClientRect();
+        //console.log(e.clientX,  rect.left);
+        if (e.clientX < rect.left) {
+          if (wrapReset)
+            props.onWrapHorizontal(false);
+          setWrapReset(false);
+        } else if (e.clientX > rect.right) {
+          if (wrapReset)
+            props.onWrapHorizontal(true);
+          setWrapReset(false);
+        } else {
+          setWrapReset(true);
+        }
+      }
+      window.addEventListener('pointermove', onPointerMove);
+      return () => {
+        window.removeEventListener('pointermove', onPointerMove);
+      };
+    }, [isMouseDown, wrapReset, setWrapReset]);
+
+
+    function onClick(e: React.PointerEvent<HTMLDivElement>,die: TDie) {
         if ((e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
             (e.target as HTMLElement).releasePointerCapture(e.pointerId);
         }

@@ -28,7 +28,7 @@ export function getRequiredScore(variant: Variant, level: number): number {
     case Variant.BLACKOUT:
       return 5 + level * 3;
     case Variant.BASE:
-      return 4 + level * 3 + Math.round(3 * Math.log(level));
+      return 3 + level * 3 + Math.round(3 * Math.log(level));
   }
 }
 

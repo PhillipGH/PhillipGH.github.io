@@ -65,6 +65,11 @@ function chunkArray<T>(arr: T[], columns: number) {
       result[result.length - 1].unshift(null);
     }
   }
+  // add nulls to make last row equal length
+  const maxLength = result[0].length;
+  while (result[result.length - 1].length < maxLength) {
+    result[result.length - 1].push(null);
+  }
   return result;
 }
 
@@ -375,12 +380,10 @@ function Board(props: {
             break;
           case DiceBonus.B_VOWEL_SWAP:
             const [x,y] = getDiceCoord(event.die, diceChunked);
-            console.log(x,y);
             // check if any adjacent dice are vowels
             let adjacentVowelCount = 0;
             for (let [dx, dy] of ROTATION_COORDS) {
               if (diceChunked[x + dx]?.[y + dy]?.letter.match(/(?<!q)[aeiou]/)) {
-                console.log(diceChunked[x + dx]?.[y + dy]?.letter);
                 adjacentVowelCount++;
               }
             }
@@ -459,6 +462,30 @@ function Board(props: {
     let requiredScore = getRequiredScore(props.variant, props.level);
     const TimeLimit = getTimeLimit(props.variant, props.level);
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
+
+    let wordWrapHorizontalEnabled = true;
+    function onWrapHorizontal(isRight: boolean) {
+      if (!wordWrapHorizontalEnabled) return;
+      let newDice = dice.slice();
+      if (isRight) {
+        newDice = dice.map((row => {
+          const wrappedDie = row[0];
+          if (wrappedDie != null && wrappedDie.id != null)
+            wrappedDie.id += 100;
+          return row.slice(1).concat(row[0]);
+        }
+        ));
+      } else {
+        newDice = dice.map((row => {
+          const wrappedDie = row[row.length - 1];
+          if (wrappedDie != null && wrappedDie.id != null)
+            wrappedDie.id += 100;
+          return [row[row.length - 1]].concat(row.slice(0, row.length - 1));
+        }
+        ));
+      }
+      setDice(newDice);
+    }
 
 
 
@@ -976,6 +1003,7 @@ function Board(props: {
             bonusText={bonusText}
             gameContext={{ currentLevel: props.level }}
             isDealing={isDealing}
+            onWrapHorizontal={onWrapHorizontal}
           />
         </div>
         {overlay}
