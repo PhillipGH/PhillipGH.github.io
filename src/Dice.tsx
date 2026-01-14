@@ -18,6 +18,7 @@ export enum DiceBonus {
     B_PLUS_LEVEL = '+<level>',
     B_HINT = 'hint',
     B_VOWEL_SWAP = 'vowel swap',
+    B_MOST_COMMON_UNUSED_LETTER = 'most common',
 }
 
 export enum DieDescription {
@@ -45,7 +46,7 @@ export const EXCLAIM  = '!'; // also update the regex in Board.tsx!
 
 // TODO:
 // Q with global 1.5x on words 6 or longer
-// Z with global word wrap effect???
+// Z with global word wrap effect??
 
 // Choose a variant? mode? modifer? Each has unlock and trophy
 // - level 5 you must use 50% of squares on board level 6 60%
@@ -100,12 +101,13 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['c', 'o', 'r', 'n', 'e', 'r'], bonus: DiceBonus.B_CORNER_SWAP },
     { faces: ['a','b','c', 'd', 'e', 'f'], bonus: DiceBonus.B_PLUS_LEVEL },
     { faces: ['l','n','r', 't', 't', 'r'], bonus: DiceBonus.B_VOWEL_SWAP},
+    { faces: ['?', '?', '?', '?', '?', '?'], bonus: DiceBonus.B_MOST_COMMON_UNUSED_LETTER},
 
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 export const RARE_DICE: TDie[] = [
     { faces: ['m', 'a', 'd', 'd', 'y', 'f'], bonus: DiceBonus.B_2X, desc: DieDescription.HEARTS},
-    { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: DiceBonus.B_ALPHABET },
+    { faces: ['a', 'b', 'c', 'd', 'e', 'f'], bonus: DiceBonus.B_ALPHABET },
     { faces: ['x', 'x', 'x', 'x', 'x', 'x'], bonus: DiceBonus.B_MULTIPLIER_COUNTER, counter: 1 },
     { faces: ['*', '*', '*', '*', '*', '*'], bonus: DiceBonus.B_MINUS1, desc: DieDescription.ASTERIX },
     { faces: [DEL, DEL, DEL, DEL, DEL, DEL], bonus: null, desc: DieDescription.MINUS_ONE_LETTER },
@@ -117,8 +119,11 @@ export const RARE_DICE: TDie[] = [
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
-// STARTER_DICE.push(BASIC_DICE[16]);
+// STARTER_DICE.push(BASIC_DICE[17]);
+// STARTER_DICE.push(BASIC_DICE[17]);
 // STARTER_DICE.push(RARE_DICE[4]);
+export const DEBUG_REWARD_SCREEN_DICE: null | TDie = null;
+
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
     switch (die.bonus) {
@@ -187,6 +192,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: 'hint', description: 'says the first 4 letters of a word of length > 4 starting with this die'};
         case DiceBonus.B_VOWEL_SWAP:
             return { title: 'vowel swap', description: 'On reroll, if fewer than 2 adjacent dice are vowels, this die becomes an \'e\''};
+        case DiceBonus.B_MOST_COMMON_UNUSED_LETTER:
+            return { title: 'most common unused letter', description: 'Always transforms into the most common unused letter on the board'};
         default:
             throw new Error('unknown bonus type');
     }

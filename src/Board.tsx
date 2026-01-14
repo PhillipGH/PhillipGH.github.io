@@ -45,6 +45,8 @@ const ROTATION_COORDS: [number, number][] = [
   [0, -1],
 ];
 
+const MOST_COMMON_LETTERS: string[] = ['e', 't', 'a', 'o', 'i', 'n', 's', 'h', 'r', 'd', 'l', 'c', 'u', 'm', 'w', 'f', 'g', 'y', 'p', 'b', 'v', 'k', 'j', 'x', 'q', 'z'];
+
 function chunkArray<T>(arr: T[], columns: number) {
   const result = arr.reduce<(T | null)[][]>((resultArray, item, index) => {
     const chunkIndex = Math.floor(index / columns)
@@ -347,6 +349,7 @@ function Board(props: {
 
       function processEvent() {
         if (events.length === 0) {
+          recalculateMostCommonUnused(diceChunked);
           recalculateHints(diceChunked);
           handleStart();
           return;
@@ -576,6 +579,36 @@ function Board(props: {
             // console.log(hints, hint);
             break;
         }
+      }
+    }
+  }
+
+  function recalculateMostCommonUnused(diceArray: (TDie | null)[][]) {
+    const usedLetters = new Set();
+    const diceToCalculate: TDie[] = [];
+    for (let i = 0; i < diceArray.length; i++) {
+      for (let j = 0; j < diceArray[0].length; j++) {
+        const die = diceArray[i][j];
+        if (!die) continue;
+        switch (die.bonus) {
+          case DiceBonus.B_MOST_COMMON_UNUSED_LETTER:
+            diceToCalculate.push(die);
+            break;
+          default:
+            die.letter.split('').forEach(l => usedLetters.add(l));
+        }
+      }
+    }
+    let index = 0;
+    for (let i = 0; i < diceToCalculate.length; i++) {
+      while (index < MOST_COMMON_LETTERS.length && usedLetters.has(MOST_COMMON_LETTERS[index])) {
+        index++;
+      }
+      if (index < MOST_COMMON_LETTERS.length) {
+        diceToCalculate[i].letter = MOST_COMMON_LETTERS[index];
+        index++;
+      } else {
+        diceToCalculate[i].letter = 'z';
       }
     }
   }
@@ -827,6 +860,7 @@ function Board(props: {
     let last = word.toUpperCase();
     setLastWord({ word: last, score: scoreChange, invalidReason: suffix });
     setCurrentWord([]);
+    recalculateMostCommonUnused(newDice);
     recalculateHints(newDice, newUsedWords);
   }
 

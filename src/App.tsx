@@ -3,13 +3,13 @@ import './App.css'
 import React from 'react';
 
 import RewardsPhase, { DiceView } from './RewardsPhase';
-import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie } from './Dice';
+import { BASIC_DICE, RARE_DICE, DiceBonus, STARTER_DICE, TDie, DEBUG_REWARD_SCREEN_DICE } from './Dice';
 import Board from './Board';
 import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.8';
+const VERSION = 'v0.1.2.10';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -233,7 +233,11 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     setDice(STARTER_DICE);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
-    setChoices(getNRandom(BASIC_DICE, 3));
+    if (DEBUG_REWARD_SCREEN_DICE) {
+      setChoices([DEBUG_REWARD_SCREEN_DICE, ...getNRandom(BASIC_DICE, 2)]);
+    } else {
+      setChoices(getNRandom(BASIC_DICE, 3));
+    }
     setRerollCounter(null);
     setStats(STARTING_STATS);
     setVariant(variant);

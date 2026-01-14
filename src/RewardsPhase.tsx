@@ -39,6 +39,7 @@ export function DiceList(props: { dice: TDie[] }) {
             <Die key={i} die={die} />
         </div>
     );
+    console.log(props.dice, diceElements);
     return diceElements.reduce((result, currentComponent) => {
         return !result ? currentComponent : (
             <React.Fragment>
