@@ -67,6 +67,11 @@ function chunkArray<T>(arr: T[], columns: number) {
       result[result.length - 1].unshift(null);
     }
   }
+  // add nulls to make last row equal length
+  const maxLength = result[0].length;
+  while (result[result.length - 1].length < maxLength) {
+    result[result.length - 1].push(null);
+  }
   return result;
 }
 
@@ -378,12 +383,10 @@ function Board(props: {
             break;
           case DiceBonus.B_VOWEL_SWAP:
             const [x,y] = getDiceCoord(event.die, diceChunked);
-            console.log(x,y);
             // check if any adjacent dice are vowels
             let adjacentVowelCount = 0;
             for (let [dx, dy] of ROTATION_COORDS) {
               if (diceChunked[x + dx]?.[y + dy]?.letter.match(/(?<!q)[aeiou]/)) {
-                console.log(diceChunked[x + dx]?.[y + dy]?.letter);
                 adjacentVowelCount++;
               }
             }
@@ -462,6 +465,32 @@ function Board(props: {
     let requiredScore = getRequiredScore(props.variant, props.level);
     const TimeLimit = getTimeLimit(props.variant, props.level);
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
+
+    let wordWrapHorizontalEnabled = dice.some(row => row.some(die => die?.bonus === DiceBonus.B_WRAP_HORIZONTAL));
+    function onWrapHorizontal(dir: 'L'|'R'): (TDie | null)[][] | null {
+      if (!wordWrapHorizontalEnabled) return null;
+    
+      let newDice = dice.slice();
+      if (dir === 'R') {
+        newDice = dice.map((row => {
+          const wrappedDie = row[0];
+          if (wrappedDie != null && wrappedDie.id != null)
+            wrappedDie.id += 100;
+          return row.slice(1).concat(row[0]);
+        }
+        ));
+      } else {
+        newDice = dice.map((row => {
+          const wrappedDie = row[row.length - 1];
+          if (wrappedDie != null && wrappedDie.id != null)
+            wrappedDie.id += 100;
+          return [row[row.length - 1]].concat(row.slice(0, row.length - 1));
+        }
+        ));
+      }
+      setDice(newDice);
+      return newDice;
+    }
 
 
 
@@ -1010,6 +1039,7 @@ function Board(props: {
             bonusText={bonusText}
             gameContext={{ currentLevel: props.level }}
             isDealing={isDealing}
+            onWrapHorizontal={onWrapHorizontal}
           />
         </div>
         {overlay}

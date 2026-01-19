@@ -16,6 +16,18 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
   }
   
+  function isWordWrappable(side: 'L'|'R', currentWord: TDie[], dice: (TDie | null)[][]) {
+    if (currentWord.length === 0) return false;
+    for (let i = 0; i < dice.length; i++) {
+        // check opposite side
+        const d = dice[i][side === 'R' ? 0 : dice[i].length -1];
+        if (d && currentWord.includes(d)) {
+          return false;
+        }
+      }
+    return true;
+  }
+
   function isValidMove(die: TDie, currentWord: TDie[], dice: (TDie | null)[][]) {
     if (currentWord.length === 0) return true;
     if (currentWord.includes(die)) return false;
@@ -65,7 +77,7 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
         clearInterval(intervalRef.current);
       };
       isAlreadyRenderingRef.current = true;
-      if (props.die && props.die.letter !== lastLetter) {
+      if (props.die && props.die.letter !== lastLetter && (props.die.id || 0) < 100) {
         clearInterval(intervalRef.current);
         setLastLetter(props.die.letter);
         let letters = props.die.faces.slice();
@@ -245,10 +257,14 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     gameContext: TGameContext,
     setCurrentWord: React.Dispatch<React.SetStateAction<TDie[]>>,
     commitWord: () => void,
+    onWrapHorizontal: (dir: 'L'|'R') => (TDie | null)[][] | null,
   } ) {
     const squaresRef : React.MutableRefObject<null|(null|HTMLDivElement)[][]> = useRef(null);
+    const timerRef = useRef(0);
+    const timerCounterRef = useRef(0);
     const [isMouseDown, setIsMouseDown] = useState(false);
     let [points, setPoints] = useState<{x: number, y: number}[]>([]);
+    const [wrapReset, setWrapReset] = useState(true);
     useEffect(() => {
       function onMouseUp() {
         setIsMouseDown(false);
@@ -272,6 +288,64 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
       }
       return squaresRef.current;
     }
+
+    function hackyTimer(dice: (TDie | null)[][]) {
+       clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          if (timerCounterRef.current >= 50) return;
+          setPoints(calculatePoints(props.currentWord, dice));
+          timerCounterRef.current++;
+          if (timerCounterRef.current >= 50) {
+            clearInterval(timerRef.current);
+          }
+        }, 10);
+    }
+
+    function wrapHorizontally(dir: 'L' | 'R') {
+        if (dir == 'L' && isWordWrappable('L', props.currentWord, props.dice) ||
+          dir == 'R' && isWordWrappable('R', props.currentWord, props.dice)) {
+          const newDice = props.onWrapHorizontal(dir);
+          if (!newDice) return;
+          // add timer that updates the current word points every 10 ms for 500ms
+          timerCounterRef.current = 0;
+          hackyTimer(newDice);
+        }
+      }
+
+      useEffect(() => {
+       hackyTimer(props.dice);
+      return () => {
+        clearInterval(timerRef.current);
+      };
+    }, [props.currentWord, props.dice]);
+
+    // add event listener for when the pointer moves outside the grid while mouse is down
+    useEffect(() => {
+      function onPointerMove(e: globalThis.PointerEvent) {
+        if (!isMouseDown) return;
+        // check if pointer is outside the grid
+        const grid = document.getElementsByClassName('grid')[0];
+        const rect = grid.getBoundingClientRect();
+        //console.log(e.clientX,  rect.left);
+        if (e.clientX < rect.left) {
+          if (wrapReset) {
+            wrapHorizontally('L');
+          }
+          setWrapReset(false);
+        } else if (e.clientX > rect.right) {
+          if (wrapReset) {
+           wrapHorizontally('R');
+          }
+          setWrapReset(false);
+        } else {
+          setWrapReset(true);
+        }
+      }
+      window.addEventListener('pointermove', onPointerMove);
+      return () => {
+        window.removeEventListener('pointermove', onPointerMove);
+      };
+    }, [isMouseDown, wrapReset, setWrapReset, props.currentWord, props.dice]);
   
     function onClick(e: PointerEvent<HTMLDivElement>,die: TDie) {
         if ((e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
@@ -292,16 +366,16 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     }
   
     function setCurrentWord(word: TDie[]) {
-      setPoints(calculatePoints(word));
+      setPoints(calculatePoints(word, props.dice));
       props.setCurrentWord(word);
     }
   
-      function calculatePoints(word: TDie[]) {
+      function calculatePoints(word: TDie[], dice: (TDie | null)[][]) {
           if (squaresRef.current === null) return [];
           const points: { x: number, y: number}[] = [];
           for (let i = 0; i < word.length; i++) {
               const current = word[i];
-              const currentRef = getSquareRef(current, props.dice, squaresRef.current);
+              const currentRef = getSquareRef(current, dice, squaresRef.current);
               if (!currentRef) continue;
               const x = currentRef.getBoundingClientRect().x + 25;
               const y = currentRef.getBoundingClientRect().y + 25;

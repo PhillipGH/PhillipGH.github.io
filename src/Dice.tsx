@@ -19,6 +19,7 @@ export enum DiceBonus {
     B_HINT = 'hint',
     B_VOWEL_SWAP = 'vowel swap',
     B_MOST_COMMON_UNUSED_LETTER = 'most common',
+    B_WRAP_HORIZONTAL = 'wrap horizontal',
 }
 
 export enum DieDescription {
@@ -115,6 +116,8 @@ export const RARE_DICE: TDie[] = [
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
     { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
     { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
+    { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
+    { faces: ['f', 's', 'r', 'c', 'p', 'b'], bonus: DiceBonus.B_WRAP_HORIZONTAL},
 ].map(d => ({ letter: d.faces[0], ...d }));
 
 // for testing
@@ -122,7 +125,7 @@ export const RARE_DICE: TDie[] = [
 // STARTER_DICE.push(BASIC_DICE[17]);
 // STARTER_DICE.push(BASIC_DICE[17]);
 // STARTER_DICE.push(RARE_DICE[4]);
-export const DEBUG_REWARD_SCREEN_DICE: null | TDie = null;
+export const DEBUG_REWARD_SCREEN_DICE: null | TDie = null // RARE_DICE[RARE_DICE.length - 1];
 
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
@@ -194,6 +197,8 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
             return { title: 'vowel swap', description: 'On reroll, if fewer than 2 adjacent dice are vowels, this die becomes an \'e\''};
         case DiceBonus.B_MOST_COMMON_UNUSED_LETTER:
             return { title: 'most common unused letter', description: 'Always transforms into the most common unused letter on the board'};
+        case DiceBonus.B_WRAP_HORIZONTAL:
+            return { title: 'Enables word wrap', description: 'Allows all words to wrap around the board horizontally'};
         default:
             throw new Error('unknown bonus type');
     }
