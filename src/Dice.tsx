@@ -22,6 +22,10 @@ export enum DiceBonus {
     B_WRAP_HORIZONTAL = 'wrap horizontal',
 }
 
+export enum DICE_RARITY {
+    RARE = 1,
+}
+
 export enum DieDescription {
     MINUS_ONE_LETTER,
     ASTERIX,
@@ -32,6 +36,7 @@ export type TDie = {
     letter: string,
     faces: string[],
     bonus: DiceBonus | null,
+    rarity?: DICE_RARITY | null,
     counter?: number,
     savedStr?: string,
     desc?: DieDescription,
@@ -65,7 +70,7 @@ const STARTER_DICE_FACES = [
     'rihprv',
     'tttome',
     //'nesuss', // a instead of u
-    'wrovgr',
+    // 'wrovgr', // removed in v0.1.2.12 to increase player agency
     //'cpiest',
     //'iypfrs', // x2
     'teliic',
@@ -97,6 +102,7 @@ export const BASIC_DICE: TDie[] = [
     { faces: ['w', 'n', 'c', 'b', 't', 's'], bonus: DiceBonus.B_PLUS1 },
     { faces: ['d', 'r', 'm', 'g', 'p', 's'], bonus: DiceBonus.B_PLUS1 },
     { faces: ['b', 'y', 'p', 'f', 'r', 'qu'], bonus: DiceBonus.B_15X },
+    { faces: ['w', 'v', 'g', 'y', 'ck', 'ck'], bonus: DiceBonus.B_15X },
     { faces: ['x', 'z', 'k', 'qu', 'j', 'y'], bonus: DiceBonus.B_2X },
     { faces: ['a', 'a', 'i', 'b', 'x', 'z'], bonus: DiceBonus.B_XREROLL }, //{ faces: ['x', 'z', 'x', 'z', 'x', 'z'], bonus: DiceBonus.B_XREROLL },
     { faces: ['c', 'o', 'r', 'n', 'e', 'r'], bonus: DiceBonus.B_CORNER_SWAP },
@@ -118,7 +124,7 @@ export const RARE_DICE: TDie[] = [
     { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
     { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
     { faces: ['f', 's', 'r', 'c', 'p', 'b'], bonus: DiceBonus.B_WRAP_HORIZONTAL},
-].map(d => ({ letter: d.faces[0], ...d }));
+].map(d => ({ letter: d.faces[0], rarity: DICE_RARITY.RARE, ...d }));
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);

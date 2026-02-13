@@ -1,6 +1,6 @@
 import {useRef, useState } from 'react'
 import './App.css'
-import { getDiceBonusText, getDieDesc, TDie } from './Dice';
+import { DICE_RARITY, getDiceBonusText, getDieDesc, TDie } from './Dice';
 import React from 'react';
 import {GameStats, TGameStats } from './GameStats';
 
@@ -99,7 +99,7 @@ function RewardsPhase(props: { choices: TDie[], onChoice: (die: TDie) => void })
     return <div id="rewardsPhase">
         <h2>Add a New Die!</h2>
         {props.choices.map((die, i) =>
-            <button key={i} className='reward' onClick={() => { onClick(die); }}>
+            <button key={i} className={die.rarity === DICE_RARITY.RARE ? 'reward rare' : 'reward'} onClick={() => { onClick(die); }}>
                 <Die key={i} die={die} chosen={die === chosenDie} />
             </button>
         )}

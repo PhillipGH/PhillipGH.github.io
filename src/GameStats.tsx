@@ -11,6 +11,7 @@ export type TGameStats = {
   currentLevelScore: number;
   currentLevelRequiredScore: number;
   nLetterWords: { [i: number]: number };
+  isWin?: boolean;
 };
 
  export const STARTING_STATS: TGameStats = {
@@ -74,13 +75,14 @@ export function GameStats(props: { stats: TGameStats }) {
 
 export function GameStatsView(props: {
   stats: TGameStats;
-
   dice: TDie[];
   onRestart: () => void;
 }) {
+  const isWin = props.stats.isWin === true;
+  const header = isWin ? <h1>🏆 You Win! 🏆</h1> : <h1>Game Over!</h1>;
   return (
     <div>
-      <h1>Game Over!</h1>
+      {header}
       <button
         onClick={() => {
           props.onRestart();

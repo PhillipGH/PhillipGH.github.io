@@ -10,7 +10,7 @@ export function getVariantDescription(variant: Variant): string {
     case Variant.BASE:
       return 'Let\'s get wordy! Form words to score points before time runs out!';
     case Variant.WORDSMITH:
-      return 'Words less than 5 letters long give 0 points! Words give bonus time!';
+      return 'Words less than 5 letters long give 0 points! Making words gives bonus time!';
     case Variant.BLACKOUT:
       return 'Use all dice to beat a level! Points grant rerolls! Words cannot be reused between levels!';
   }

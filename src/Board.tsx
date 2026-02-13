@@ -5,7 +5,7 @@ import React from 'react';
 import { TGameStats } from "./GameStats";
 import CoordinateSet, { runUnion } from "./unionfind";
 import { solveForWords } from "./Solver";
-import {getRoundDataFromSaveState } from "./App";
+import {getRoundDataFromSaveState, MAX_LEVEL } from "./App";
 import { getRequiredScore, getTimeLimit, Variant } from "./Variants";
 
 type TEvent = { die?: TDie, timing: number};
@@ -459,6 +459,7 @@ function Board(props: {
     const [levelisWon, setLevelIsWon] = useState(false);
 
     const isInEvent = eventsQueue.length > 0;
+    const isOnLastLevel = props.level === MAX_LEVEL;
 
     const intervalRef = useRef(0);
 
@@ -964,10 +965,15 @@ function Board(props: {
     
     let overlay : null | JSX.Element = null;
     if (levelisWon) {
+      const header = isOnLastLevel ? <h2>🏆 Victory! 🏆</h2> : <h2>Level {props.level} Complete!</h2>;
       overlay = <div id="boardOverlay" className="winOverlay">
         <div>
-          <h2>Level {props.level} Complete!</h2>
+          {header}
           <button onClick={() => {
+            if (isOnLastLevel) {
+              props.stats.isWin = true;
+              props.setStats(props.stats);
+            }
             props.onWin();
           }}>Continue</button>
         </div>

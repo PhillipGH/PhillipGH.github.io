@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.11';
+const VERSION = 'v0.1.2.12'
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -45,6 +45,8 @@ function getNRandom<T>(arr: T[], n: number): T[] {
   }
   return result;
 }
+
+export const MAX_LEVEL = 12;
 
 export interface RoundCookieValues {
     phase: 'mainmenu' | 'board'|'rewards' | 'view_dice' | 'stats',
@@ -210,11 +212,15 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
 
   function onWin() {
+    if (level === MAX_LEVEL) {
+      setPhase('stats');
+      return;
+    }
     setLevel(level + 1);
     setInternalCounter(internalCounter + 1);
     setPhase('rewards');
     if ((level + 1) % 3 === 0) {
-      setChoices(getNRandom(RARE_DICE, 2).concat(getNRandom(BASIC_DICE, 1)));
+      setChoices(getNRandom(RARE_DICE, 3));
     } else {
       setChoices(getNRandom(BASIC_DICE, 3));
     }
@@ -303,8 +309,14 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   if (variant !== Variant.BASE) {
     variantText = ` - ${variant}`;
   }
+  if (level === MAX_LEVEL && phase !== 'stats') {
+    variantText += ' - Final Level';
+  }
+  let levelText = `Level ${level}${variantText}`;
+  if (phase === 'stats' && stats.isWin)
+    levelText = '';
   return <div className={allowScroll ? "game" : "game noselect"}>
-      <div id='topBar'><p>Level {level}{variantText}</p><sup>{VERSION}</sup></div>
+      <div id='topBar'><p>{levelText}</p><sup>{VERSION}</sup></div>
       {viewButton}
       {content}
     </div>;
