@@ -26,15 +26,34 @@ export type TGameStats = {
   };
 
 export function GameStats(props: { stats: TGameStats }) {
+  const maxNLetterWords = Math.max(...Object.values(props.stats.nLetterWords), 1);
+  
   const nLetterWords = Object.keys(props.stats.nLetterWords)
     .map(Number)
     .sort()
-    .map((i: number) => (
-      <tr key={i}>
-        <td>{i}-Letter Words</td>
-        <td>{props.stats.nLetterWords[i]}</td>
-      </tr>
-    ));
+    .map((i: number) => {
+      const count = props.stats.nLetterWords[i];
+      const percentage = (count / maxNLetterWords) * 100;
+      return (
+        <tr key={i}>
+          <td>{i}-Letter Words</td>
+          <td>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  height: '20px',
+                  width: `${percentage}%`,
+                  backgroundColor: '#4CAF50',
+                  borderRadius: '4px',
+                  minWidth: percentage > 0 ? '4px' : '0px',
+                }}
+              />
+              <span>{count}</span>
+            </div>
+          </td>
+        </tr>
+      );
+    });
 
   return (
     <table id="letterTable">

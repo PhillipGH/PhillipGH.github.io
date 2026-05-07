@@ -1,15 +1,18 @@
-import { getPermDataFromSaveState } from "./App";
+import { getPermDataFromSaveState, MAX_LEVEL } from "./App";
 import { getVariantDescription, Variant } from "./Variants";
 
-function MainMenu(props: {variants: Variant[], onStart: (variant: Variant) => void }) {
+const NEXT_VARIANT_LEVEL_REQUIREMENT = 5;
+
+function MainMenu(props: {variants: Variant[], unlockAll: boolean, onStart: (variant: Variant) => void }) {
     const permData = getPermDataFromSaveState();
-    const maxLevels: { [key in Variant]?: number } = permData ? permData.maxLevelReached : {};
+    const variantData = permData?.variantStats ?? {};
     const variantsToDisplay = [props.variants[0]];
     const variantsToHide: Variant[] = [];
-    if (permData && permData.maxLevelReached[Variant.BASE] != null) {
+
+    if (permData && variantData[Variant.BASE] != null) {
         for (let i = 1; i < props.variants.length; i++) {
-            const lastVariantReached = permData.maxLevelReached[props.variants[i-1]];
-            if (lastVariantReached != null && lastVariantReached >= 5) {
+            const lastVariantReached = variantData[props.variants[i-1]]?.maxLevelReached;
+            if (props.unlockAll || (lastVariantReached != null && lastVariantReached >= NEXT_VARIANT_LEVEL_REQUIREMENT)) {
                 variantsToDisplay.push(props.variants[i]);
             } else {
                 variantsToHide.push(props.variants[i]);
@@ -28,9 +31,11 @@ function MainMenu(props: {variants: Variant[], onStart: (variant: Variant) => vo
                 <button onClick={() => { props.onStart(variant); }}>
                     Play {variant} Mode
                 </button>
-                {maxLevels[variant] != null && <div className="maxLevelReached">
-                    Reached Level: {maxLevels[variant]}
-                </div>}
+                {variantData[variant] != null && (variantData[variant]!.maxLevelReached >= MAX_LEVEL ? <div className="maxLevelReached">
+                    Consecutive Wins: {variantData[variant]!.consecutiveWins}
+                </div> : <div className="maxLevelReached">
+                    Reached Level: {variantData[variant]!.maxLevelReached}
+                </div>)}
             </div>
         )}
         {variantsToHide.map((variant, i) =>

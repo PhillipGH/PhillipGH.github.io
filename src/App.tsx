@@ -9,7 +9,7 @@ import {GameStatsView, STARTING_STATS, TGameStats } from './GameStats';
 import { Variant } from './Variants';
 import MainMenu from './MainMenu';
 
-const VERSION = 'v0.1.2.12'
+const VERSION = 'v0.1.2.13';
 
 function loadDictionary(dictionaryRaw: string): {dSet: Set<string>, dSort: string[]} {
   let dictionary = new Set<string>();
@@ -63,7 +63,10 @@ export interface RoundCookieValues {
 };
 
 export interface PermCookieValues {
-    maxLevelReached: { [key in Variant]?: number },
+    variantStats: { [key in Variant]?: {
+      maxLevelReached: number,
+      consecutiveWins?: number,
+    } },
 };
 
 const ROUND_COOKIE_NAME = 'save';
@@ -89,7 +92,7 @@ const PERM_COOKIE_NAME = 'perm_save';
     if (data) {
       try {
         const parsedData: PermCookieValues = JSON.parse(data);
-        if (parsedData.maxLevelReached) {
+        if (parsedData.variantStats) {
           return parsedData;
         }
       } catch (e) {
@@ -110,6 +113,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
   const [stats, setStats] = useState<TGameStats>(STARTING_STATS);
   const [variant, setVariant] = useState<Variant>(Variant.BASE);
   const [usedWords, setUsedWords] = useState(new Set<string>());
+  const [unlockAll, setUnlockAll] = useState(false);
 
   const allowScroll = phase === 'view_dice' || phase === 'stats';
   const timeoutRef = useRef(0);
@@ -146,22 +150,38 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
       rerollCounter,
     };
     localStorage.setItem(ROUND_COOKIE_NAME, JSON.stringify(data));
-    
-    const permData = getPermDataFromSaveState();
+  }
+
+  // only called on level win or lose event
+  function setPermaSaveData(event: 'win' | 'lose') {
+    let permData = getPermDataFromSaveState();
     if (!permData) {
-      const newPermData: PermCookieValues = {
-        maxLevelReached: {
-          [variant]: level,
+      permData = {
+        variantStats: {
+          [variant]: {
+            maxLevelReached: level,
+          },
         },
       }
-      localStorage.setItem(PERM_COOKIE_NAME, JSON.stringify(newPermData));
     } else {
-      if (permData.maxLevelReached[variant] == null || permData.maxLevelReached[variant] < level) {
-        permData.maxLevelReached[variant] = level;
-        localStorage.setItem(PERM_COOKIE_NAME, JSON.stringify(permData));
+      if (permData.variantStats[variant] == null) {
+        permData.variantStats[variant] = {
+          maxLevelReached: level,
+        };
+      } else if (permData.variantStats[variant].maxLevelReached < level) {
+        permData.variantStats[variant]!.maxLevelReached = level;
+      } else if (level === MAX_LEVEL && event === 'win') {
+        if (!permData.variantStats[variant]!.consecutiveWins) {
+          permData.variantStats[variant]!.consecutiveWins = 1;
+        } else {
+          permData.variantStats[variant]!.consecutiveWins! += 1;
+        }
+      }
+      if (event === 'lose') {
+        permData.variantStats[variant]!.consecutiveWins = 0;
       }
     }
-    
+    localStorage.setItem(PERM_COOKIE_NAME, JSON.stringify(permData));
   }
 
   useEffect(() => {
@@ -194,7 +214,12 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   useEffect(() => {
     if (!loadFromSaveState()) {
-      onQuitRun();
+      if (getPermDataFromSaveState() == null) {
+        onStartRun(Variant.BASE);
+      } else {
+        onQuitRun();
+      }
+      
     }
     return () => {
       clearTimeout(timeoutRef.current);
@@ -210,22 +235,34 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
     
   }, [allowScroll]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const myParam = params.get('unlock');
+    if (myParam != null) {
+      setUnlockAll(true);
+    }
+  }, []);
+
+
 
   function onWin() {
-    if (level === MAX_LEVEL) {
-      setPhase('stats');
-      return;
+      setPermaSaveData('win');
+      if (level === MAX_LEVEL) {
+        setPhase('stats');
+        return;
+      }
+      setLevel(level + 1);
+      setInternalCounter(internalCounter + 1);
+      setPhase('rewards');
+      if ((level + 1) % 3 === 0) {
+        setChoices(getNRandom(RARE_DICE, 3));
+      } else {
+        setChoices(getNRandom(BASIC_DICE, 3));
+      }
     }
-    setLevel(level + 1);
-    setInternalCounter(internalCounter + 1);
-    setPhase('rewards');
-    if ((level + 1) % 3 === 0) {
-      setChoices(getNRandom(RARE_DICE, 3));
-    } else {
-      setChoices(getNRandom(BASIC_DICE, 3));
-    }
-  }
+
   function onLose() {
+    setPermaSaveData('lose');
     setPhase('stats');
   }
 
@@ -264,7 +301,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   if (phase === 'mainmenu') {
     return <div className="game">
-      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH, Variant.BLACKOUT]} onStart={(variant: Variant) => {onStartRun(variant);}}/>
+      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH, Variant.BLACKOUT]} unlockAll={unlockAll} onStart={(variant: Variant) => {onStartRun(variant);}}/>
     </div>;
   }
 
