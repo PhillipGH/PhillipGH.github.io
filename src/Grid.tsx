@@ -28,9 +28,14 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
     return true;
   }
 
-  function isValidMove(die: TDie, currentWord: TDie[], dice: (TDie | null)[][]) {
+  function isValidMove(die: TDie, currentWord: TDie[], dice: (TDie | null)[][], allowReuse: boolean) {
     if (currentWord.length === 0) return true;
-    if (currentWord.includes(die)) return false;
+    if (allowReuse) {
+      if (currentWord[currentWord.length - 1] === die) return false;
+    } else {
+      if (currentWord.includes(die)) return false;
+    }
+    if (!allowReuse && currentWord.includes(die)) return false;
     for (let i = 0; i < dice.length; i++) {
       for (let j = 0; j < dice[i].length; j++) {
         if (dice[i][j] === die) {
@@ -357,11 +362,11 @@ function getSquareRef(die: TDie, dice: (TDie | null)[][], squareRefs: (null|HTML
   
     function onEnter(die: TDie) {
       if (!isMouseDown) return;
-      if (props.currentWord.length > 1 && props.currentWord[props.currentWord.length - 2] === die) {
+      if ( props.currentWord.length > 1 && props.currentWord[props.currentWord.length - 2] === die) { // maybe add !props.gameContext.allowReuse && back in
         setCurrentWord(props.currentWord.slice(0, -1));
         return;
       }
-      if (!isValidMove(die, props.currentWord, props.dice)) return;
+      if (!isValidMove(die, props.currentWord, props.dice, props.gameContext.allowReuse)) return;
       setCurrentWord(props.currentWord.concat(die));
     }
   

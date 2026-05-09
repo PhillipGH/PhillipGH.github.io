@@ -20,6 +20,7 @@ export enum DiceBonus {
     B_VOWEL_SWAP = 'vowel swap',
     B_MOST_COMMON_UNUSED_LETTER = 'most common',
     B_WRAP_HORIZONTAL = 'wrap horizontal',
+    B_REUSE = 'reuse',
 }
 
 export enum DICE_RARITY {
@@ -43,7 +44,7 @@ export type TDie = {
     id?: number,
     usedThisLevel?: boolean,
 };
-export type TGameContext = { currentLevel: number };
+export type TGameContext = { currentLevel: number, allowReuse: boolean };
 
 export const REROLL_TIME_BONUS = 30;
 
@@ -122,16 +123,18 @@ export const RARE_DICE: TDie[] = [
     { faces: ['r', 'o', 't', 'a', 't', 'e'], bonus: DiceBonus.B_ROTATE },
     { faces: ['d', 'w/a', 'p', 'p', 'e', 's'], bonus: DiceBonus.B_SWAP },
     { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
-    { faces: ['s', 'p', 'c', 'd', 'm', 'a'], bonus: DiceBonus.B_HINT},
     { faces: ['f', 's', 'r', 'c', 'p', 'b'], bonus: DiceBonus.B_WRAP_HORIZONTAL},
+    { faces: ['s/y', 's/k', 'w/v', 'm/n', 'a/y', 'a/s'], bonus: DiceBonus.B_REUSE},
 ].map(d => ({ letter: d.faces[0], rarity: DICE_RARITY.RARE, ...d }));
 
 // for testing
 // STARTER_DICE.push(...ADDITIONAL_DICE);
 // STARTER_DICE.push(BASIC_DICE[17]);
 // STARTER_DICE.push(BASIC_DICE[17]);
+// STARTER_DICE.push(RARE_DICE[3]);
 // STARTER_DICE.push(RARE_DICE[4]);
-export const DEBUG_REWARD_SCREEN_DICE: null | TDie = null // RARE_DICE[RARE_DICE.length - 1];
+
+export const DEBUG_REWARD_SCREEN_DICE: null | TDie = null; // RARE_DICE[RARE_DICE.length - 1];
 
 
 export function getSquareBonusDisplay(die: TDie, context: TGameContext): string {
@@ -204,7 +207,9 @@ export function getDiceBonusText(bonus: DiceBonus): { title: string, description
         case DiceBonus.B_MOST_COMMON_UNUSED_LETTER:
             return { title: 'most common unused letter', description: 'Always transforms into the most common unused letter on the board'};
         case DiceBonus.B_WRAP_HORIZONTAL:
-            return { title: 'Enables word wrap', description: 'Allows all words to wrap around the board horizontally'};
+            return { title: 'enables word wrap', description: 'Allows all words to wrap around the board horizontally'};
+        case DiceBonus.B_REUSE:
+            return { title: 'reusable dice', description: 'All dice can now be used multiple times per word'};
         default:
             throw new Error('unknown bonus type');
     }

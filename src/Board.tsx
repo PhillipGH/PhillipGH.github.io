@@ -467,7 +467,8 @@ function Board(props: {
     const TimeLimit = getTimeLimit(props.variant, props.level);
     // const TimeLimit = 300 + props.level * 5 + timeBonus;
 
-    let wordWrapHorizontalEnabled = dice.some(row => row.some(die => die?.bonus === DiceBonus.B_WRAP_HORIZONTAL));
+    const wordWrapHorizontalEnabled = dice.some(row => row.some(die => die?.bonus === DiceBonus.B_WRAP_HORIZONTAL));
+    const allowReuse = dice.some(row => row.some(die => die?.bonus === DiceBonus.B_REUSE));
     function onWrapHorizontal(dir: 'L'|'R'): (TDie | null)[][] | null {
       if (!wordWrapHorizontalEnabled) return null;
     
@@ -493,15 +494,170 @@ function Board(props: {
       return newDice;
     }
 
+  
+    /*
+  function testWordIsInDictionary(letters: string[]): void{
+    const word = letters.map(l => ({letter: l} as TDie));
+    const startTime = performance.now();
+    const result = wordIsInDictionaryHelper(word, word.map(d => d.letter));
+    const endTime = performance.now();
+    const result2 = wordIsInDictionaryMatching(word);
+    const endTime2 = performance.now();
+    console.log(`v1 ${endTime - startTime} milliseconds ---- v2 ${endTime2 - endTime}`)
+    if ( result?.contributions.length != result2?.contributions.length || result && result2 && result.contributions.join('') !== result2.contributions.join('')) {
+      console.log("WARNING!", {result, result2});
+    }
+  }
 
+   testWordIsInDictionary(['e', DEL, 'e', '*']);
+   */
+  
+  function getWordBranchingExceedsThreshold(word: string): boolean {
+    // this is a heuristic function that checks if the number of possible combinations of dice that could form the word exceeds a certain threshold, in which case we should use the matching algorithm instead of the backtracking algorithm
+    let combinations = 1;
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === DEL) {
+        combinations *= word.length;
+      } else if (word[i] === '*') {
+        combinations *= ALPHABET.length;
+      } else if (i < word.length - 2 && word[i + 1] === '/') {
+        combinations *= 2;
+        i += 2;
+      }
+
+      if (combinations > 20000) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   function wordIsInDictionary(word: TDie[]): {dice: TDie[], contributions: string[]} | null {
-    return wordIsInDictionaryHelper(word, word.map(d => d.letter));
+    if (ALL_WORDS_VALID) {
+      return { dice: word, contributions: word.map(d => d.letter) };
+    }
+    let result: {dice: TDie[], contributions: string[]} | null = null;
+    if (getWordBranchingExceedsThreshold(word.map(d => d.letter).join(''))) {
+      result = wordIsInDictionaryMatching(word);
+    } else {
+      result = wordIsInDictionaryHelper(word, word.map(d => d.letter));
+    }
+    return result;
+  }
+
+
+  // second version of matching that checks entire dictionary
+  function wordIsInDictionaryMatching(word: TDie[]): {dice: TDie[], contributions: string[]} | null {
+    // first calculate expected word length range based on dice bonuses, then only check dictionary for words in that length range that match the pattern of the word with wildcards
+    let usedWord: {dice: TDie[], contributions: string[]} | null = null;
+
+    // remove and count delete dice from dice list
+    let deletes = 0;
+    let wordDice: TDie[] = [];
+    for (let i = 0; i < word.length; i++) {
+      if (word[i].letter === DEL) {
+        deletes++;
+      } else {
+        wordDice.push(word[i]);
+      }
+    }
+
+    // iterate through every word in the dictionary
+    for (let dictWord of props.dictionarySorted) {
+      // check if word is in valid length range
+      // TODO count word length
+
+      const match = wordMatches(wordDice, [], [], dictWord, 0, 0, deletes);
+      if (match) {
+        if (props.usedWords.has(dictWord)) {
+          usedWord = match;
+        } else {
+          return match;
+        }
+      }
+  }
+    return usedWord;
+}
+
+  function wordMatches(wordDice: TDie[], dice: TDie[], contributions: string[], word: string, diceIndex: number, wordIndex: number, deletes: number): {dice: TDie[], contributions: string[]} | null {
+    //if (word === 'eat')
+     // console.log({wordDice, dice, contributions, word, diceIndex, wordIndex, deletes});
+    // wordDice is the complete list of dice we're using and dice is just the ones we've matched so far
+    if (wordIndex === word.length) {
+      if (diceIndex === wordDice.length)
+        return {dice, contributions};
+      else if (deletes === 0) return null;
+    }
+    if (diceIndex === wordDice.length) {
+      return null;
+    }
+
+    if (wordDice[diceIndex].letter === DEL) {
+      // add to contributions
+      let contributionsCopy1 = contributions.slice();
+      let diceCopy1 = dice.slice();
+      diceCopy1.push(wordDice[diceIndex]);
+      contributionsCopy1.push('');
+      let result = wordMatches(wordDice, diceCopy1, contributionsCopy1, word, diceIndex + 1, wordIndex, deletes - 1);
+      if (result) {
+        return result;
+      }
+    } else if (deletes > 0) {
+      // try deleting next die
+      let contributionsCopy1 = contributions.slice();
+      let diceCopy1 = dice.slice();
+      diceCopy1.push(wordDice[diceIndex]);
+      contributionsCopy1.push('');
+      let result = wordMatches(wordDice, diceCopy1, contributionsCopy1, word, diceIndex + 1, wordIndex, deletes - 1);
+      if (result) {
+        return result;
+      }
+    }
+
+    if (wordIndex === word.length) {
+      return null;
+    }
+    
+    // try to match next die
+    const tokens = tokenizeWord(wordDice[diceIndex].letter);
+    let contribution = '';
+    for (let i = 0; i < tokens.length; i++) {
+      if (wordIndex === word.length) return null;
+      if (tokens[i].length > 1 && tokens[i].charAt(1) === '/') {
+        // wildcard token, try both possibilities
+        const options = [tokens[i].charAt(0), tokens[i].charAt(2)];
+        for (let option of options) {
+          if (option === word.charAt(wordIndex)) {
+            contribution += option;
+          }
+        }
+      } else if (tokens[i] === '*') {
+        contribution += word.charAt(wordIndex);
+      } else {
+        if (tokens[i] === word.charAt(wordIndex)) {
+          contribution += tokens[i];
+        }
+      }
+      wordIndex++;
+    }
+    if (contribution === '') {
+      return null;
+    }
+    let contributionsCopy = contributions.slice();
+    let diceCopy = dice.slice();
+    contributionsCopy.push(contribution);
+    diceCopy.push(wordDice[diceIndex]);
+    let result = wordMatches(wordDice, diceCopy, contributionsCopy, word, diceIndex + 1, wordIndex, deletes);
+    if (result) {
+      return result;
+    }
+    return null;
   }
 
   function wordIsInDictionaryHelper(dice: TDie[], contributions: string[], ref = { isUsed: false }): {dice: TDie[], contributions: string[]} | null {
+    // console.log("checking word", contributions.join(""), "with dice", dice.map(d => d.letter).join(","));
     let stringWord = contributions.join("");
-    if (ALL_WORDS_VALID || props.dictionary.has(stringWord)) {
+    if (props.dictionary.has(stringWord)) {
       return {dice, contributions};
     }
     let dieIndex = -1;
@@ -537,7 +693,8 @@ function Board(props: {
       contributions[dieIndex] = '';
       //const tokens = tokenizeWord(word);
       for (let i = 0; i < dice.length; i++) {
-        // TODO maybe we should make it so deletes can't delete other deletes?
+        if (dice[i].letter === DEL) // don't delete deletes
+          continue;
         const ref2 = { isUsed: false };
         let result = wordIsInDictionaryHelper(spliceNoMutate(dice, i), spliceNoMutate(contributions, i), ref2);
         if (result) {
@@ -1043,7 +1200,7 @@ function Board(props: {
             commitWord={commitWord}
             isRotating={isRotating}
             bonusText={bonusText}
-            gameContext={{ currentLevel: props.level }}
+            gameContext={{ currentLevel: props.level, allowReuse: allowReuse }}
             isDealing={isDealing}
             onWrapHorizontal={onWrapHorizontal}
           />
