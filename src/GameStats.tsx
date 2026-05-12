@@ -25,8 +25,10 @@ export type TGameStats = {
     nLetterWords: {},
   };
 
+const EXPECTED_MAX_WORDS = 100; // don't fill the bar unless they got a lot of words
+
 export function GameStats(props: { stats: TGameStats }) {
-  const maxNLetterWords = Math.max(...Object.values(props.stats.nLetterWords), 1);
+  const maxNLetterWords = Math.max(Math.max(...Object.values(props.stats.nLetterWords), 1), EXPECTED_MAX_WORDS);
   
   const nLetterWords = Object.keys(props.stats.nLetterWords)
     .map(Number)
@@ -35,7 +37,7 @@ export function GameStats(props: { stats: TGameStats }) {
       const count = props.stats.nLetterWords[i];
       const percentage = (count / maxNLetterWords) * 100;
       return (
-        <tr key={i}>
+        <>
           <td>{i}-Letter Words</td>
           <td>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -43,7 +45,7 @@ export function GameStats(props: { stats: TGameStats }) {
                 style={{
                   height: '20px',
                   width: `${percentage}%`,
-                  backgroundColor: '#4CAF50',
+                  backgroundColor: '#6a83c9',
                   borderRadius: '4px',
                   minWidth: percentage > 0 ? '4px' : '0px',
                 }}
@@ -51,42 +53,57 @@ export function GameStats(props: { stats: TGameStats }) {
               <span>{count}</span>
             </div>
           </td>
-        </tr>
+        </>
       );
     });
+
+  const rows = [];
+  if (props.stats.currentLevel !== 0) {
+    rows.push(...[
+      <>
+        <td>Level Reached</td>
+        <td>{props.stats.currentLevel}</td>
+      </>,
+      <>
+        <td>Level {props.stats.currentLevel} Score</td>
+        <td>
+          {props.stats.currentLevelScore} /{" "}
+          {props.stats.currentLevelRequiredScore}
+        </td>
+      </>
+    ]);
+  }
+  rows.push(...[
+    <>
+      <td>Longest Word{props.stats.longestWords.length > 1 && "s"}</td>
+      <td>{props.stats.longestWords.join(", ").toUpperCase()}</td>
+    </>,
+    <>
+      <td>Highest Scoring Word</td>
+      <td>
+        {props.stats.highestWordScoreWord.toUpperCase()} (
+        {props.stats.highestWordScore})
+      </td>
+    </>,
+  ]);
+  rows.push(...nLetterWords);
+  rows.push(...[
+    <>
+      <td>Total Words</td>
+      <td>{props.stats.totalWords}</td>
+    </>,
+  ]);
+
+  const animatedRows = rows.map((r, i) =>
+    <tr key={i} className="statsRow" style={{animationDelay: `${i * 0.1}s`}}>
+      {r}
+    </tr>
+  );
 
   return (
     <table id="letterTable">
       <tbody>
-        {props.stats.currentLevel !== 0 && <>
-        <tr>
-          <td>Level Reached</td>
-          <td>{props.stats.currentLevel}</td>
-        </tr>
-        <tr>
-          <td>Level {props.stats.currentLevel} Score</td>
-          <td>
-            {props.stats.currentLevelScore} /{" "}
-            {props.stats.currentLevelRequiredScore}
-          </td>
-        </tr>
-        </>}
-        <tr>
-          <td>Longest Word{props.stats.longestWords.length > 1 && "s"}</td>
-          <td>{props.stats.longestWords.join(", ").toUpperCase()}</td>
-        </tr>
-        <tr>
-          <td>Highest Scoring Word</td>
-          <td>
-            {props.stats.highestWordScoreWord.toUpperCase()} (
-            {props.stats.highestWordScore})
-          </td>
-        </tr>
-        {nLetterWords}
-        <tr>
-          <td>Total Words</td>
-          <td>{props.stats.totalWords}</td>
-        </tr>
+        {animatedRows}
       </tbody>
     </table>
   );
