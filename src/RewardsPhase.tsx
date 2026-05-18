@@ -35,7 +35,7 @@ function Die(props: { die: TDie, chosen?: boolean}) {
 
 export function DiceList(props: { dice: TDie[] }) {
     const diceElements = props.dice.map((die, i) =>
-        <div key={i} className='listDice'>
+        <div key={i} className='listDice' style={{animationDelay: `${i * 0.1}s`}}>
             <Die key={i} die={die} />
         </div>
     );
@@ -99,7 +99,12 @@ function RewardsPhase(props: { choices: TDie[], onChoice: (die: TDie) => void })
     return <div id="rewardsPhase">
         <h2>Add a New Die!</h2>
         {props.choices.map((die, i) =>
-            <button key={i} className={die.rarity === DICE_RARITY.RARE ? 'reward rare' : 'reward'} onClick={() => { onClick(die); }}>
+            <button
+                key={i}
+                className={die.rarity === DICE_RARITY.RARE ? 'reward rare' : 'reward'}
+                style={{animationDelay: `${i * 0.1}s`}}
+                onClick={() => { onClick(die); }}
+            >
                 <Die key={i} die={die} chosen={die === chosenDie} />
             </button>
         )}

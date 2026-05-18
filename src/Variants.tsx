@@ -2,6 +2,7 @@
 export enum Variant {
   BASE = 'Standard',
   WORDSMITH = 'Wordsmith',
+  SCRAMBLE = 'Scramble',
   BLACKOUT = 'Blackout',
 }
 
@@ -11,6 +12,8 @@ export function getVariantDescription(variant: Variant): string {
       return 'Let\'s get wordy! Form words to score points before time runs out!';
     case Variant.WORDSMITH:
       return 'Words less than 5 letters long give 0 points! Making words gives bonus time!';
+    case Variant.SCRAMBLE:
+      return 'Quick! You have mere seconds to find a word before time expires! The board rerolls after every word!';
     case Variant.BLACKOUT:
       return 'Use all dice to beat a level! Points grant rerolls! Words cannot be reused between levels!';
   }
@@ -29,6 +32,8 @@ export function getRequiredScore(variant: Variant, level: number): number {
       return 5 + level * 3;
     case Variant.BASE:
       return 4 + level * 3 + Math.round(3 * Math.log(level));
+    case Variant.SCRAMBLE:
+      return 4 + level * 2 + Math.round(3 * Math.log(level));
   }
 }
 
@@ -39,6 +44,8 @@ export function getTimeLimit(variant: Variant, level: number): number {
       return 88 + level * 4;
     case Variant.WORDSMITH:
       return 90;
+    case Variant.SCRAMBLE:
+      return 10;
     case Variant.BLACKOUT:
       return 70 + level * 2;
   }

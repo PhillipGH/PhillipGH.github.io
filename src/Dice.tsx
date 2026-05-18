@@ -92,6 +92,7 @@ export const STARTER_DICE: TDie[] = STARTER_DICE_FACES.map(faces => ({ letter: f
 
 export const BASIC_DICE: TDie[] = [
     { faces: ['ing', 'th', 'er', 'in', 'ed', 'tion'], bonus: null },
+    // { faces: ['in*', '*ng', '*ion', 'in', 'ed', 'tion'], bonus: null },
     { faces: ['s', 's', 's', 'e', 'n', 'a'], bonus: null },
     { faces: ['t', 'o', 'o', 'o', 't', 's'], bonus: null },
     { faces: ['a', 'a', 'a', 'a', 'a', 'a'], bonus: null },

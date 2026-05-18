@@ -991,6 +991,9 @@ function Board(props: {
                 timeChange = -11 + 3 * word.length; // 3 seconds per letter
               }
             }
+            if (props.variant === Variant.SCRAMBLE) {
+              timeChange = -4 + 2 * word.length; // 3 seconds per letter
+            }
           }
             
           setScore(score + scoreChange);
@@ -1038,6 +1041,10 @@ function Board(props: {
               clearInterval(intervalRef.current);
               setLevelIsWon(true);
             }
+          }
+          if (props.variant === Variant.SCRAMBLE) {
+            // reroll the board
+            reroll();
           }
         }
       }

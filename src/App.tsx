@@ -301,7 +301,7 @@ function Game(props: {dictionary: Set<string>, dictionarySorted: string[]}) {
 
   if (phase === 'mainmenu') {
     return <div className="game">
-      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH, Variant.BLACKOUT]} unlockAll={unlockAll} onStart={(variant: Variant) => {onStartRun(variant);}}/>
+      <MainMenu variants={[Variant.BASE, Variant.WORDSMITH, Variant.SCRAMBLE, Variant.BLACKOUT]} unlockAll={unlockAll} onStart={(variant: Variant) => {onStartRun(variant);}}/>
     </div>;
   }
 
